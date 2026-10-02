@@ -1,11 +1,11 @@
 {
-    "name": "atelier_couture",
-    "short_name": "atelier_couture",
+    "name": "Atelier Couture",
+    "short_name": "Atelier Couture",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#5B1F6B",
+    "theme_color": "#5B1F6B",
+    "description": "Gestion d'atelier de couture : commandes, métrage, factures, stock et rendez-vous.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

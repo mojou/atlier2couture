@@ -10,7 +10,7 @@ Elle fonctionne sur Android, iOS et navigateur web (Flutter + Supabase).
 | **Atelier** | Création avec logo, nom, slogan, coordonnées, NIF/RCCM, devise, unité (yards ou mètres), largeur de tissu, TVA, acompte, conditions de facture, couleur des documents. |
 | **Équipe** | Rôles propriétaire, gérant, couturier et caissier. Seuls le propriétaire et le gérant peuvent supprimer ou modifier les réglages. |
 | **Clients et mesures** | 15 mesures standard avec historique. Les valeurs incohérentes sont signalées (taille/bassin inversés, valeur hors plage…). |
-| **Calculateur de métrage** | Chemise, haut/tunique, pantalon, jupe, robe, boubou, veste doublée, modèle personnalisé, et ensembles. Découpe **zone par zone** (coutures et ourlets compris), **plan de coupe dessiné**, quantité à acheter en yd ou en m, doublure et entoilage séparés, alerte si une pièce dépasse la largeur du tissu, **fiche de découpe PDF**. |
+| **Calculateur de métrage** | Chemise, haut/tunique, pantalon, jupe, robe, boubou, veste doublée, kaba, toghu, sokoto, agbada, modèle personnalisé, et ensembles. Découpe **zone par zone** (coutures et ourlets compris), **plan de coupe dessiné**, quantité à acheter en yd ou en m, doublure et entoilage séparés, alerte si une pièce dépasse la largeur du tissu, **fiche de découpe PDF**. |
 | **Commandes** | Façon + tissu (apporté par le client ou pris dans le stock) + fournitures + options, remise, TVA et acompte calculés automatiquement. Suivi de production : Nouvelle → Découpe → Couture → Essayage → Finitions → Prête → Livrée. Couturier assigné, retards signalés, priorité urgente. |
 | **Stock** | Tissus, doublures, fils, boutons, fermetures… Entrées, sorties et inventaire, alerte stock bas. Déduction automatique au passage en découpe. |
 | **Devis et factures** | PDF avec logo et informations de l'atelier, numérotation automatique (FAC-2026-0001), **montant en lettres**, acomptes et reste à payer. Partage par WhatsApp. |
@@ -91,6 +91,25 @@ Les limites sont appliquées par la base de données. La clé secrète SasPay re
 5. Sur **app.saspay.me**, créez un **webhook** pointant vers `https://<projet>.supabase.co/functions/v1/saspay-webhook`, pour les événements `transaction.*`. Copiez le **secret** affiché (il n'est montré qu'une fois) dans `SASPAY_WEBHOOK_SECRET`.
 
 Le webhook déclenche seulement une revérification : l'abonnement n'est activé qu'après confirmation directe auprès de SasPay. Sans webhook, l'application vérifie aussi le paiement au retour de la page SasPay.
+
+## Photos, caisse, paie, suivi client, exports
+
+Exécutez [supabase/migrations/20261003000000_photos_caisse_suivi.sql](supabase/migrations/20261003000000_photos_caisse_suivi.sql) dans le SQL Editor.
+
+- **Photos de commande** : modèle, tissu, essayage, vêtement fini. Bucket privé `photos`, accès par liens temporaires.
+- **Lien de suivi client** : `https://<site>/suivi.html?c=<jeton>`. Le client voit l'avancement sans compte (fonction `suivi_commande`).
+- **Caisse** : dépenses par catégorie, encaissements, bénéfice du mois.
+- **Paie des couturiers** : à la pièce ou en pourcentage de la façon, par mois. Les versements sont enregistrés en dépenses « Salaires ».
+- **Exports CSV**, lisibles par Excel : clients, commandes, devis et factures, paiements, dépenses, stock.
+
+## Clé de signature Android (IMPORTANT)
+
+Les fichiers `app/android/upload-keystore.jks` et `app/android/key.properties` (qui contient le mot de passe) signent l'application.
+Ils sont **volontairement exclus de git**.
+
+**Sauvegardez-les** dans un endroit sûr (clé USB, Google Drive privé). Sans eux, il est impossible de publier une mise à jour sur le Play Store.
+
+Paquet pour le Play Store : `flutter build appbundle --release --dart-define-from-file=config.json`.
 
 ## Premier démarrage
 

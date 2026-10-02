@@ -13,6 +13,8 @@ import '../pdf/documents_pdf.dart';
 import 'client_detail_screen.dart';
 import 'document_detail_screen.dart';
 import 'messagerie_screen.dart';
+import 'photos_commande.dart';
+import '../core/config.dart';
 import 'paiement_dialog.dart';
 import 'pdf_screen.dart';
 import 'rdv_form_screen.dart';
@@ -43,12 +45,32 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
 
   Future<_Vue> _charger() async {
     final id = widget.commandeId;
-    final c = await supa.from('commandes').select('*, clients(*)').eq('id', id).single();
+    final c = await supa
+        .from('commandes')
+        .select('*, clients(*)')
+        .eq('id', id)
+        .single();
     final r = await Future.wait<List<Map<String, dynamic>>>([
-      supa.from('documents').select().eq('commande_id', id).eq('type', 'facture').neq('statut', 'annulee'),
-      supa.from('commande_historique').select().eq('commande_id', id).order('created_at'),
-      supa.from('membres').select('user_id, nom, role').eq('atelier_id', Session.instance.atelierId),
-      supa.from('rendez_vous').select('*, clients(nom)').eq('commande_id', id).order('debut'),
+      supa
+          .from('documents')
+          .select()
+          .eq('commande_id', id)
+          .eq('type', 'facture')
+          .neq('statut', 'annulee'),
+      supa
+          .from('commande_historique')
+          .select()
+          .eq('commande_id', id)
+          .order('created_at'),
+      supa
+          .from('membres')
+          .select('user_id, nom, role')
+          .eq('atelier_id', Session.instance.atelierId),
+      supa
+          .from('rendez_vous')
+          .select('*, clients(nom)')
+          .eq('commande_id', id)
+          .order('debut'),
     ]);
     return _Vue(c, r[0].isEmpty ? null : r[0].first, r[1], r[2], r[3]);
   }
@@ -60,20 +82,91 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
     if (mounted) _recharger();
   }
 
+  /// Annulation après la découpe : propose de remettre en stock ce qui n'a pas été utilisé.
+  Future<void> _restituerStock(
+      Map<String, dynamic> c, Map<String, dynamic> facture) async {
+    final lignes = [
+      for (final l in (facture['lignes'] as List? ?? const []))
+        LigneDoc.depuisJson(Map<String, dynamic>.from(l as Map))
+    ].where((l) => l.articleStockId != null && l.quantite > 0).toList();
+    if (lignes.isEmpty) return;
+    final ok = await confirmer(
+      context,
+      'Remettre en stock ?',
+      'La commande a déjà été découpée. Remettre en stock ce qui peut être réutilisé ?\n\n'
+          '${lignes.map((l) => '• ${l.designation} : ${nombre(l.quantite)} ${l.unite}').join('\n')}\n\n'
+          'Ne remettez pas le tissu déjà coupé.',
+      ok: 'Remettre en stock',
+    );
+    if (!ok) return;
+    await supa.from('stock_mouvements').insert([
+      for (final l in lignes)
+        {
+          'atelier_id': Session.instance.atelierId,
+          'article_id': l.articleStockId,
+          'type': 'entree',
+          'quantite': l.quantite,
+          'motif': 'Annulation commande ${c['numero']}',
+          'commande_id': c['id'],
+        }
+    ]);
+    await supa
+        .from('commandes')
+        .update({'stock_deduit': false}).eq('id', c['id'] as String);
+  }
+
+  /// Lien public de suivi (sans compte) à envoyer au client.
+  String? _lienSuivi(Map<String, dynamic> c) {
+    final token = c['suivi_token'] as String?;
+    if (token == null) return null;
+    final base =
+        Config.siteUrl.isNotEmpty ? Uri.parse(Config.siteUrl) : Uri.base;
+    return base.resolve('/suivi.html?c=$token').toString();
+  }
+
+  Future<void> _envoyerSuivi(Map<String, dynamic> c) async {
+    final lien = _lienSuivi(c);
+    if (lien == null) {
+      snack(context,
+          'Lien de suivi indisponible : exécutez le script SQL des photos et du suivi.',
+          erreur: true);
+      return;
+    }
+    final client = c['clients'] as Map<String, dynamic>;
+    await ouvrirWhatsApp(
+      context,
+      client['telephone'] as String?,
+      'Bonjour ${client['nom']}, suivez l\'avancement de votre commande ${c['numero']} '
+      'chez ${Session.instance.atelier['nom']} ici : $lien',
+    );
+  }
+
   Future<void> _changerStatut(_Vue v, String nouveau) async {
     final c = v.commande;
     try {
-      if (nouveau == 'decoupe' && c['stock_deduit'] != true && v.facture != null) {
+      if (nouveau == 'decoupe' &&
+          c['stock_deduit'] != true &&
+          v.facture != null) {
         await _deduireStock(c, v.facture!);
       }
-      await supa.from('commandes').update({'statut': nouveau}).eq('id', c['id'] as String);
+      if (nouveau == 'annulee' &&
+          c['stock_deduit'] == true &&
+          v.facture != null) {
+        await _restituerStock(c, v.facture!);
+      }
+      await supa
+          .from('commandes')
+          .update({'statut': nouveau}).eq('id', c['id'] as String);
       if (!mounted) return;
       if (nouveau == 'prete') {
         final client = c['clients'] as Map<String, dynamic>;
         final prevenir = await confirmer(context, 'Commande prête',
-            'Prévenir ${client['nom']} par WhatsApp que sa commande est prête ?', ok: 'Envoyer');
+            'Prévenir ${client['nom']} par WhatsApp que sa commande est prête ?',
+            ok: 'Envoyer');
         if (prevenir && mounted) {
-          final reste = v.facture == null ? 0 : num0(v.facture!['total']) - num0(v.facture!['montant_paye']);
+          final reste = v.facture == null
+              ? 0
+              : num0(v.facture!['total']) - num0(v.facture!['montant_paye']);
           await ouvrirWhatsApp(
             context,
             client['telephone'] as String?,
@@ -90,7 +183,8 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
   }
 
   /// Au passage en découpe : sortie de stock du tissu et des fournitures fournis par l'atelier.
-  Future<void> _deduireStock(Map<String, dynamic> c, Map<String, dynamic> facture) async {
+  Future<void> _deduireStock(
+      Map<String, dynamic> c, Map<String, dynamic> facture) async {
     final lignes = [
       for (final l in (facture['lignes'] as List? ?? const []))
         LigneDoc.depuisJson(Map<String, dynamic>.from(l as Map))
@@ -114,7 +208,9 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
           'commande_id': c['id'],
         }
     ]);
-    await supa.from('commandes').update({'stock_deduit': true}).eq('id', c['id'] as String);
+    await supa
+        .from('commandes')
+        .update({'stock_deduit': true}).eq('id', c['id'] as String);
   }
 
   Future<void> _changerLivraison(Map<String, dynamic> c) async {
@@ -126,7 +222,9 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
     );
     if (d == null) return;
     try {
-      await supa.from('commandes').update({'date_livraison': isoDate(d)}).eq('id', c['id'] as String);
+      await supa
+          .from('commandes')
+          .update({'date_livraison': isoDate(d)}).eq('id', c['id'] as String);
       _recharger();
     } catch (e) {
       if (mounted) snack(context, messageErreur(e), erreur: true);
@@ -135,7 +233,9 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
 
   Future<void> _assigner(Map<String, dynamic> c, String? userId) async {
     try {
-      await supa.from('commandes').update({'assigne_a': userId}).eq('id', c['id'] as String);
+      await supa
+          .from('commandes')
+          .update({'assigne_a': userId}).eq('id', c['id'] as String);
       _recharger();
     } catch (e) {
       if (mounted) snack(context, messageErreur(e), erreur: true);
@@ -167,14 +267,18 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
         final client = c['clients'] as Map<String, dynamic>;
         final statut = c['statut'] as String;
         final idx = etapesProduction.indexOf(statut);
-        final suivant = idx >= 0 && idx < etapesProduction.length - 1 ? etapesProduction[idx + 1] : null;
+        final suivant = idx >= 0 && idx < etapesProduction.length - 1
+            ? etapesProduction[idx + 1]
+            : null;
         final articles = [
           for (final a in (c['articles'] as List? ?? const []))
             ArticleCommande.depuisJson(Map<String, dynamic>.from(a as Map))
         ];
         final f = v.facture;
         final t = Theme.of(context);
-        final nomsMembres = {for (final m in v.membres) m['user_id']: m['nom'] ?? roles[m['role']]};
+        final nomsMembres = {
+          for (final m in v.membres) m['user_id']: m['nom'] ?? roles[m['role']]
+        };
         final assigne = c['assigne_a'] as String?;
 
         return Scaffold(
@@ -185,7 +289,9 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
                 onSelected: (s) => _changerStatut(v, s),
                 itemBuilder: (_) => [
                   for (final e in libellesStatut.entries)
-                    if (e.key != statut) PopupMenuItem(value: e.key, child: Text('Passer à : ${e.value}')),
+                    if (e.key != statut)
+                      PopupMenuItem(
+                          value: e.key, child: Text('Passer à : ${e.value}')),
                 ],
               ),
             ],
@@ -198,45 +304,71 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
                 title: Text(client['nom'] as String),
                 subtitle: Text(client['telephone'] as String? ?? ''),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => _ouvrir(ClientDetailScreen(clientId: client['id'] as String)),
+                onTap: () => _ouvrir(
+                    ClientDetailScreen(clientId: client['id'] as String)),
               ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () => _envoyerSuivi(c),
+                  icon: const Icon(Icons.share_location),
+                  label: const Text('Envoyer le lien de suivi au client'),
+                ),
+              ),
+              const SizedBox(height: 4),
               Row(children: [
-                Pastille(libellesStatut[statut] ?? statut, couleurStatut(statut)),
+                Pastille(
+                    libellesStatut[statut] ?? statut, couleurStatut(statut)),
                 const SizedBox(width: 8),
-                if (c['priorite'] == 'urgente') const Pastille('URGENT', Colors.red),
+                if (c['priorite'] == 'urgente')
+                  const Pastille('URGENT', Colors.red),
                 const Spacer(),
-                Text('Commandée le ${dateCourte(lireDate(c['date_commande']))}', style: t.textTheme.bodySmall),
+                Text('Commandée le ${dateCourte(lireDate(c['date_commande']))}',
+                    style: t.textTheme.bodySmall),
               ]),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.event),
-                title: Text('Livraison : ${dateCourte(lireDate(c['date_livraison']))}'),
+                title: Text(
+                    'Livraison : ${dateCourte(lireDate(c['date_livraison']))}'),
                 trailing: const Icon(Icons.edit_calendar),
                 onTap: () => _changerLivraison(c),
               ),
               DropdownButtonFormField<String?>(
                 initialValue: nomsMembres.containsKey(assigne) ? assigne : null,
-                decoration: const InputDecoration(labelText: 'Couturier assigné', prefixIcon: Icon(Icons.engineering)),
+                decoration: const InputDecoration(
+                    labelText: 'Couturier assigné',
+                    prefixIcon: Icon(Icons.engineering)),
                 items: [
-                  const DropdownMenuItem<String?>(value: null, child: Text('Personne')),
+                  const DropdownMenuItem<String?>(
+                      value: null, child: Text('Personne')),
                   for (final m in v.membres)
                     DropdownMenuItem<String?>(
                       value: m['user_id'] as String,
-                      child: Text('${m['nom'] ?? ''} (${roles[m['role']] ?? ''})'),
+                      child:
+                          Text('${m['nom'] ?? ''} (${roles[m['role']] ?? ''})'),
                     ),
                 ],
                 onChanged: (u) => _assigner(c, u),
               ),
-              if (c['notes'] != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(c['notes'] as String)),
+              if (c['notes'] != null)
+                Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(c['notes'] as String)),
             ]),
             Section(titre: 'Production', children: [
               Wrap(spacing: 4, runSpacing: 4, children: [
                 for (var i = 0; i < etapesProduction.length; i++)
                   Chip(
                     avatar: Icon(
-                      statut == 'annulee' ? Icons.block : (i <= idx ? Icons.check_circle : Icons.radio_button_unchecked),
+                      statut == 'annulee'
+                          ? Icons.block
+                          : (i <= idx
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked),
                       size: 18,
-                      color: i <= idx ? couleurStatut(etapesProduction[i]) : null,
+                      color:
+                          i <= idx ? couleurStatut(etapesProduction[i]) : null,
                     ),
                     label: Text(libellesStatut[etapesProduction[i]]!),
                   ),
@@ -258,52 +390,70 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
                       ListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.circle, size: 12, color: couleurStatut(h['statut'] as String)),
-                        title: Text(libellesStatut[h['statut']] ?? h['statut'] as String),
-                        subtitle: Text('${dateHeure(lireDate(h['created_at'])!)}'
+                        leading: Icon(Icons.circle,
+                            size: 12,
+                            color: couleurStatut(h['statut'] as String)),
+                        title: Text(libellesStatut[h['statut']] ??
+                            h['statut'] as String),
+                        subtitle: Text(
+                            '${dateHeure(lireDate(h['created_at'])!)}'
                             '${nomsMembres[h['par']] == null ? '' : ' · ${nomsMembres[h['par']]}'}'),
                       ),
                   ],
                 ),
             ]),
+            PhotosCommande(
+                commandeId: c['id'] as String,
+                clientId: client['id'] as String?),
             Section(titre: 'Vêtements', children: [
               for (final a in articles)
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${a.designation} ×${a.quantite}', style: t.textTheme.titleMedium),
-                      if (a.tissuSource == 'client')
-                        Text('Tissu du client${a.metrage > 0 ? ' : ${quantiteTissu(a.metrage)} nécessaires' : ''}'),
-                      if (a.tissuClient != null) Text('Déposé : ${a.tissuClient}', style: t.textTheme.bodySmall),
-                      if (a.tissuSource == 'atelier') Text('Tissu atelier : ${a.tissuNom ?? ''} · ${quantiteTissu(a.metrage)}'),
-                      if (a.calcul != null) ...[
-                        ExpansionTile(
-                          tilePadding: EdgeInsets.zero,
-                          title: Text('Découpe : ${a.calcul!.pieces.length} zones'),
-                          children: [
-                            for (final p in a.calcul!.pieces)
-                              ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text('${p.zone} ×${p.quantite}'),
-                                subtitle: Text('${nombre(p.largeur)} × ${nombre(p.hauteur)} cm'
-                                    '${p.tissu == TypeTissu.principal ? '' : ' · ${libellesTissu[p.tissu]}'}'),
-                              ),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${a.designation} ×${a.quantite}',
+                              style: t.textTheme.titleMedium),
+                          if (a.tissuSource == 'client')
+                            Text(
+                                'Tissu du client${a.metrage > 0 ? ' : ${quantiteTissu(a.metrage)} nécessaires' : ''}'),
+                          if (a.tissuClient != null)
+                            Text('Déposé : ${a.tissuClient}',
+                                style: t.textTheme.bodySmall),
+                          if (a.tissuSource == 'atelier')
+                            Text(
+                                'Tissu atelier : ${a.tissuNom ?? ''} · ${quantiteTissu(a.metrage)}'),
+                          if (a.calcul != null) ...[
+                            ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              title: Text(
+                                  'Découpe : ${a.calcul!.pieces.length} zones'),
+                              children: [
+                                for (final p in a.calcul!.pieces)
+                                  ListTile(
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text('${p.zone} ×${p.quantite}'),
+                                    subtitle: Text(
+                                        '${nombre(p.largeur)} × ${nombre(p.hauteur)} cm'
+                                        '${p.tissu == TypeTissu.principal ? '' : ' · ${libellesTissu[p.tissu]}'}'),
+                                  ),
+                              ],
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () => _ficheDecoupe(c, a),
+                              icon: const Icon(Icons.picture_as_pdf),
+                              label: const Text('Fiche de découpe'),
+                            ),
                           ],
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: () => _ficheDecoupe(c, a),
-                          icon: const Icon(Icons.picture_as_pdf),
-                          label: const Text('Fiche de découpe'),
-                        ),
-                      ],
-                    ]),
+                        ]),
                   ),
                 ),
               if (c['stock_deduit'] == true)
-                Text('✓ Tissu et fournitures déduits du stock', style: t.textTheme.bodySmall),
+                Text('✓ Tissu et fournitures déduits du stock',
+                    style: t.textTheme.bodySmall),
             ]),
             Section(titre: 'Paiement', children: [
               if (f == null)
@@ -311,13 +461,16 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
               else ...[
                 Row(children: [
                   Expanded(child: Text('Facture ${f['numero']}')),
-                  Pastille(statutsDocument[f['statut']] ?? '', couleurStatutDocument(f['statut'] as String)),
+                  Pastille(statutsDocument[f['statut']] ?? '',
+                      couleurStatutDocument(f['statut'] as String)),
                 ]),
                 const SizedBox(height: 6),
                 Text('Total : ${argent(num0(f['total']))}'),
                 Text('Payé : ${argent(num0(f['montant_paye']))}'),
-                Text('Reste : ${argent(num0(f['total']) - num0(f['montant_paye']))}',
-                    style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                    'Reste : ${argent(num0(f['total']) - num0(f['montant_paye']))}',
+                    style: t.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Wrap(spacing: 8, children: [
                   if (f['statut'] != 'payee')
@@ -329,7 +482,8 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
                       label: const Text('Encaisser'),
                     ),
                   OutlinedButton.icon(
-                    onPressed: () => _ouvrir(DocumentDetailScreen(documentId: f['id'] as String)),
+                    onPressed: () => _ouvrir(
+                        DocumentDetailScreen(documentId: f['id'] as String)),
                     icon: const Icon(Icons.receipt),
                     label: const Text('Voir la facture'),
                   ),
@@ -337,7 +491,8 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
               ],
             ]),
             Section(titre: 'Discussion interne', children: [
-              const Text('Échangez avec l\'équipe sur cette commande : consignes de coupe, '
+              const Text(
+                  'Échangez avec l\'équipe sur cette commande : consignes de coupe, '
                   'retouches, questions… Le client ne voit pas ces messages.'),
               const SizedBox(height: 8),
               FilledButton.tonalIcon(
@@ -349,17 +504,20 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
             Section(
               titre: 'Rendez-vous',
               action: TextButton.icon(
-                onPressed: () => _ouvrir(RdvFormScreen(client: client, commande: c)),
+                onPressed: () =>
+                    _ouvrir(RdvFormScreen(client: client, commande: c)),
                 icon: const Icon(Icons.add),
                 label: const Text('Planifier'),
               ),
               children: [
-                if (v.rdvs.isEmpty) const Text('Aucun rendez-vous (essayage, livraison…).'),
+                if (v.rdvs.isEmpty)
+                  const Text('Aucun rendez-vous (essayage, livraison…).'),
                 for (final r in v.rdvs)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(iconeRdv(r['type'] as String)),
-                    title: Text('${typesRdv[r['type']]} · ${dateHeure(lireDate(r['debut'])!)}'),
+                    title: Text(
+                        '${typesRdv[r['type']]} · ${dateHeure(lireDate(r['debut'])!)}'),
                     subtitle: Text(statutsRdv[r['statut']] ?? ''),
                     onTap: () => _ouvrir(RdvFormScreen(rdv: r)),
                   ),

@@ -51,6 +51,27 @@ void main() {
       expect(pieces.firstWhere((p) => p.zone == 'Devant').quantite, 6);
     });
 
+    test('tenues locales : toutes les mesures requises donnent des pièces valides', () {
+      const femme = Mesures({
+        'tour_poitrine': 96,
+        'tour_bassin': 104,
+        'tour_bras': 30,
+        'longueur_manche': 45,
+        'longueur_robe': 140,
+        'longueur_haut': 80,
+        'longueur_pantalon': 100,
+      });
+      for (final code in ['kaba', 'toghu', 'sokoto', 'agbada']) {
+        final type = typeParCode(code)!;
+        expect(mesuresManquantes([type], femme), isEmpty, reason: code);
+        final pieces = genererPieces([VetementChoisi(type)], femme);
+        expect(pieces, isNotEmpty, reason: code);
+        expect(pieces.every((p) => p.largeur > 0 && p.hauteur > 0), isTrue, reason: code);
+        final r = placerPieces(pieces, TypeTissu.principal, 150);
+        expect(r.quantite('yd'), greaterThan(0), reason: code);
+      }
+    });
+
     test('un ensemble préfixe les zones par le vêtement', () {
       final pieces = genererPieces(
         [VetementChoisi(typeParCode('chemise')!), VetementChoisi(typeParCode('pantalon')!)],

@@ -111,7 +111,7 @@ class _CalculateurScreenState extends State<CalculateurScreen> {
 
   Set<String> get _clesRequises => {for (final v in _vetements) ...v.type.requises};
 
-  bool get _aBoubou => _vetements.any((v) => v.type.code == 'boubou');
+  bool get _aBoubou => _vetements.any((v) => v.type.code == 'boubou' || v.type.code == 'agbada');
 
   Future<void> _chargerClient() async {
     final c = await Navigator.of(context).push<Map<String, dynamic>>(

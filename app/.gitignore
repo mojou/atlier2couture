@@ -1,4 +1,8 @@
 config.json
+# Clé de signature Android : à sauvegarder hors de git (voir README)
+android/key.properties
+*.jks
+*.keystore
 .dart_tool/
 .packages
 build/

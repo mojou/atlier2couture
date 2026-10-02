@@ -1,7 +1,7 @@
 name: atelier_couture
 description: Gestion d'ateliers de couture (multi-ateliers) - stock, coupe, devis, factures, rendez-vous.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -21,11 +21,29 @@ dependencies:
   shared_preferences: ^2.3.0
   url_launcher: ^6.3.0
   permission_handler: ^11.3.0
+  image_picker: ^1.2.3
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
+
+# Icônes générées depuis le logo (voir tool/generer_icone_test.dart) :
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/icone/icone.png
+  adaptive_icon_background: "#5B1F6B"
+  adaptive_icon_foreground: assets/icone/icone_avant.png
+  web:
+    generate: true
+    image_path: assets/icone/icone.png
+    background_color: "#5B1F6B"
+    theme_color: "#5B1F6B"

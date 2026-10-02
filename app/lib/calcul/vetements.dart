@@ -278,6 +278,77 @@ List<Piece> _veste(Mesures m, OptionsCoupe o) {
   ];
 }
 
+// ---------------------------------------------------------------------------
+// Tenues d'Afrique centrale et de l'Ouest
+// ---------------------------------------------------------------------------
+
+/// Kaba (kaba ngondo) : robe très ample, manches larges, volant facultatif en bas.
+List<Piece> _kaba(Mesures m, OptionsCoupe o) {
+  final c = o.couture;
+  final tour = _max(m['tour_poitrine'], m['tour_bassin']) + o.aisance;
+  final long = m['longueur_robe'];
+  final manche = m['longueur_manche'];
+  return [
+    Piece('Devant', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c + o.ourlet),
+        note: 'Coupe évasée vers le bas'),
+    Piece('Dos', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c + o.ourlet)),
+    if (manche > 0)
+      Piece('Manche ample', 2, arrondiDemi(m['tour_bras'] + 24 + 2 * c), arrondiDemi(manche + c + 3)),
+    Piece("Parementure d'encolure", 2, 34, 16, pivotable: true),
+    Piece('Poche', 2, 20, 24, pivotable: true),
+  ];
+}
+
+/// Toghu : tunique ample des Grassfields (velours brodé), manches larges.
+List<Piece> _toghu(Mesures m, OptionsCoupe o) {
+  final c = o.couture;
+  final tour = _max(m['tour_poitrine'], m['tour_bassin']) + o.aisance;
+  final long = m['longueur_haut'];
+  final manche = m['longueur_manche'];
+  return [
+    Piece('Devant', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c + o.ourlet),
+        note: 'Velours : couper toutes les pièces dans le même sens du poil'),
+    Piece('Dos', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c + o.ourlet)),
+    if (manche > 0)
+      Piece('Manche', 2, arrondiDemi(m['tour_bras'] + 18 + 2 * c), arrondiDemi(manche + c + 4),
+          note: 'Bas de manche brodé'),
+    Piece("Plastron brodé / parementure d'encolure", 2, 36, 42),
+    if (o.doublure) ...[
+      Piece('Devant', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c), tissu: TypeTissu.doublure),
+      Piece('Dos', 1, arrondiDemi(tour / 2 + 2 * c), arrondiDemi(long + c), tissu: TypeTissu.doublure),
+    ],
+  ];
+}
+
+/// Sokoto : pantalon large et droit, taille à coulisse ou élastiquée.
+List<Piece> _sokoto(Mesures m, OptionsCoupe o) {
+  final c = o.couture;
+  final bassin = m['tour_bassin'];
+  final long = m['longueur_pantalon'];
+  final devant = (bassin + o.aisance) / 4 + bassin / 16;
+  final dos = (bassin + o.aisance) / 4 + bassin / 10 + 2;
+  return [
+    Piece('Devant', 2, arrondiDemi(devant + 2 * c), arrondiDemi(long + 4 + c + o.ourlet),
+        note: 'Rentré de coulisse compris'),
+    Piece('Dos', 2, arrondiDemi(dos + 2 * c), arrondiDemi(long + 6 + c + o.ourlet)),
+    Piece('Poche', 2, 18, 26, pivotable: true),
+  ];
+}
+
+/// Agbada : très grande robe de dessus (souvent portée sur une tunique et un sokoto).
+List<Piece> _agbada(Mesures m, OptionsCoupe o) {
+  final c = o.couture;
+  final long = m['longueur_haut'];
+  final ampleur = _max(o.ampleur, 170);
+  return [
+    Piece('Devant', 1, arrondiDemi(ampleur + 2 * c), arrondiDemi(long + c + o.ourlet),
+        note: "D'un poignet à l'autre, bras écartés"),
+    Piece('Dos', 1, arrondiDemi(ampleur + 2 * c), arrondiDemi(long + c + o.ourlet)),
+    Piece('Plastron brodé', 2, 40, 55),
+    Piece('Poche poitrine', 1, 22, 26, pivotable: true),
+  ];
+}
+
 final typesVetements = <TypeVetement>[
   TypeVetement(
     code: 'chemise',
@@ -331,6 +402,36 @@ final typesVetements = <TypeVetement>[
     requises: ['tour_cou', 'carrure', 'tour_poitrine', 'longueur_haut', 'longueur_manche', 'tour_bras'],
     aisanceDefaut: 12,
     generer: _veste,
+  ),
+  TypeVetement(
+    code: 'kaba',
+    nom: 'Kaba (kaba ngondo)',
+    requises: ['tour_poitrine', 'longueur_robe'],
+    optionnelles: ['tour_bassin', 'longueur_manche', 'tour_bras'],
+    aisanceDefaut: 40,
+    generer: _kaba,
+  ),
+  TypeVetement(
+    code: 'toghu',
+    nom: 'Toghu (tunique des Grassfields)',
+    requises: ['tour_poitrine', 'longueur_haut'],
+    optionnelles: ['tour_bassin', 'longueur_manche', 'tour_bras'],
+    aisanceDefaut: 30,
+    generer: _toghu,
+  ),
+  TypeVetement(
+    code: 'sokoto',
+    nom: 'Sokoto (pantalon large)',
+    requises: ['tour_bassin', 'longueur_pantalon'],
+    aisanceDefaut: 24,
+    generer: _sokoto,
+  ),
+  TypeVetement(
+    code: 'agbada',
+    nom: 'Agbada (grande robe)',
+    requises: ['tour_poitrine', 'longueur_haut'],
+    aisanceDefaut: 0,
+    generer: _agbada,
   ),
   TypeVetement(
     code: 'perso',

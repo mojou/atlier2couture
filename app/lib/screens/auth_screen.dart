@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../core/config.dart';
 
 import '../core/supa.dart';
@@ -55,6 +57,11 @@ class _AuthScreenState extends State<AuthScreen> {
     }
     return Config.siteUrl.isEmpty ? null : Config.siteUrl;
   }
+
+  void _ouvrirPage(String page) => launchUrl(
+        Uri.parse(Config.siteUrl.isNotEmpty ? Config.siteUrl : 'https://atelier2couture.netlify.app/').resolve('/$page'),
+        mode: LaunchMode.externalApplication,
+      );
 
   Future<void> _motDePasseOublie() async {
     final email = _email.text.trim();
@@ -139,6 +146,25 @@ class _AuthScreenState extends State<AuthScreen> {
                         : Text(_inscription ? 'Créer mon compte' : 'Se connecter'),
                   ),
                 ),
+                if (_inscription)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Wrap(alignment: WrapAlignment.center, children: [
+                      const Text('En créant un compte, vous acceptez les '),
+                      InkWell(
+                        onTap: () => _ouvrirPage('cgu.html'),
+                        child: Text('conditions d\'utilisation',
+                            style: TextStyle(color: t.colorScheme.primary, decoration: TextDecoration.underline)),
+                      ),
+                      const Text(' et la '),
+                      InkWell(
+                        onTap: () => _ouvrirPage('confidentialite.html'),
+                        child: Text('politique de confidentialité',
+                            style: TextStyle(color: t.colorScheme.primary, decoration: TextDecoration.underline)),
+                      ),
+                      const Text('.'),
+                    ]),
+                  ),
                 TextButton(
                   onPressed: () => setState(() => _inscription = !_inscription),
                   child: Text(_inscription ? 'J\'ai déjà un compte' : 'Créer un compte'),

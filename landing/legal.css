@@ -1,0 +1,25 @@
+:root { --c: #5b1f6b; --fond: #fbf7f1; --carte: #fff; --texte: #22172a; --gris: #6b6272; --trait: #eadfe9; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0; --trait: #33273b; --c: #e9b949; }
+}
+:root[data-theme="dark"] { --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0; --trait: #33273b; --c: #e9b949; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.7 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { border-bottom: 1px solid var(--trait); background: var(--carte); }
+header div, main, footer { width: min(820px, 100% - 32px); margin: 0 auto; }
+header div { display: flex; justify-content: space-between; align-items: center; height: 60px; }
+header a { text-decoration: none; color: var(--texte); font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 19px; }
+header nav a { font-family: inherit; font-weight: 500; font-size: 14px; color: var(--gris); margin-left: 16px; }
+main { padding: 40px 0 24px; }
+h1 { font-family: Fraunces, Georgia, serif; font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0 0 8px; }
+h2 { font-family: Fraunces, Georgia, serif; font-size: 22px; margin: 34px 0 8px; color: var(--c); }
+p, li { color: var(--texte); }
+.maj { color: var(--gris); font-size: 14px; margin-bottom: 28px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+th { color: var(--gris); font-weight: 600; }
+a { color: var(--c); }
+.encadre { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 16px 18px; }
+footer { padding: 24px 0 40px; color: var(--gris); font-size: 14px; border-top: 1px solid var(--trait); }
+footer a { color: inherit; margin-right: 14px; }
+@media (max-width: 560px) { header nav { display: none; } table, thead, tbody, tr, th, td { display: block; } th { padding-bottom: 0; } }

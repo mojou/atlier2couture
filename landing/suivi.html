@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Suivi de commande · Atelier Couture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --c: #5b1f6b; --fond: #fbf7f1; --carte: #fff; --texte: #22172a; --gris: #6b6272; --trait: #eadfe9; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0; --trait: #33273b; }
+    }
+    :root[data-theme="dark"] { --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0; --trait: #33273b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.55 Inter, system-ui, sans-serif; }
+    main { width: min(560px, 100% - 32px); margin: 0 auto; padding: 28px 0 48px; }
+    .carte { background: var(--carte); border: 1px solid var(--trait); border-radius: 20px; padding: 22px; margin-bottom: 14px; }
+    .entete { display: flex; gap: 14px; align-items: center; }
+    .logo { width: 56px; height: 56px; border-radius: 14px; object-fit: contain; background: #fff; border: 1px solid var(--trait); }
+    .logo-vide { width: 56px; height: 56px; border-radius: 14px; background: var(--c); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 22px; }
+    h1 { font-family: Fraunces, Georgia, serif; font-size: 22px; margin: 0; }
+    .gris { color: var(--gris); font-size: 14px; }
+    .statut { font-family: Fraunces, Georgia, serif; font-size: 26px; margin: 4px 0 2px; color: var(--c); }
+    .etapes { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 0; }
+    .etapes li { display: flex; gap: 12px; align-items: flex-start; position: relative; padding-bottom: 16px; }
+    .etapes li:not(:last-child)::before { content: ""; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--trait); }
+    .etapes li.fait:not(:last-child)::before { background: var(--c); }
+    .pastille { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--trait); background: var(--carte); display: grid; place-items: center; color: #fff; font-size: 13px; z-index: 1; }
+    .fait .pastille { background: var(--c); border-color: var(--c); }
+    .actuel .pastille { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 22%, transparent); }
+    .etapes b { display: block; }
+    .ligne { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--trait); }
+    .ligne:last-child { border: 0; }
+    .boutons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .btn { flex: 1; text-align: center; padding: 12px 16px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+    .btn-wa { background: #25d366; color: #fff; }
+    .btn-tel { border: 1.5px solid var(--trait); color: var(--texte); }
+    .alerte { text-align: center; padding: 40px 22px; }
+    footer { text-align: center; color: var(--gris); font-size: 13px; }
+    footer a { color: inherit; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="chargement" class="carte alerte">Chargement du suivi…</div>
+    <div id="erreur" class="carte alerte" hidden>
+      <h1>Commande introuvable</h1>
+      <p class="gris">Le lien est incomplet ou n'est plus valable. Demandez un nouveau lien à votre atelier.</p>
+    </div>
+
+    <div id="suivi" hidden>
+      <div class="carte">
+        <div class="entete">
+          <img id="logo" class="logo" alt="" hidden>
+          <div id="logo-vide" class="logo-vide"></div>
+          <div>
+            <h1 id="atelier"></h1>
+            <div id="adresse" class="gris"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="carte">
+        <div class="gris" id="bonjour"></div>
+        <div class="statut" id="statut"></div>
+        <div class="gris" id="livraison"></div>
+        <ol class="etapes" id="etapes"></ol>
+      </div>
+
+      <div class="carte">
+        <div class="gris" style="margin-bottom:6px">Commande <b id="numero"></b></div>
+        <div id="articles"></div>
+        <div class="ligne" id="ligne-reste" hidden><span>Reste à payer</span><b id="reste"></b></div>
+      </div>
+
+      <div class="carte" id="contact" hidden>
+        <div class="gris" style="margin-bottom:10px">Une question sur votre commande ?</div>
+        <div class="boutons">
+          <a class="btn btn-wa" id="wa" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="btn btn-tel" id="tel">Appeler</a>
+        </div>
+      </div>
+    </div>
+
+    <footer>Suivi propulsé par <a href="/">Atelier Couture</a></footer>
+  </main>
+
+  <script>
+    (function () {
+      var SUPABASE = "https://dmscwwreikhlkefgtvgu.supabase.co";
+      var CLE_PUBLIQUE = "sb_publishable_n9oiZ6P2navBWz2PcxgfVQ_CD2obj1I";
+      var ETAPES = [
+        ["nouvelle", "Commande enregistrée", "Vos mesures et votre modèle sont notés."],
+        ["decoupe", "Découpe", "Le tissu est en cours de découpe."],
+        ["couture", "Couture", "Votre vêtement est en cours de confection."],
+        ["essayage", "Essayage", "Votre vêtement est prêt pour l'essayage."],
+        ["finitions", "Finitions", "Dernières retouches et finitions."],
+        ["prete", "Prête", "Votre commande vous attend à l'atelier."],
+        ["livree", "Livrée", "Merci pour votre confiance !"]
+      ];
+      var $ = function (id) { return document.getElementById(id); };
+
+      function erreur() { $("chargement").hidden = true; $("erreur").hidden = false; }
+      function date(iso) {
+        if (!iso) return "";
+        return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      }
+      function argent(v, devise) {
+        return Math.round(v).toLocaleString("fr-FR").replace(/ | /g, " ") + " " + (devise || "FCFA");
+      }
+
+      var jeton = new URLSearchParams(location.search).get("c");
+      if (!jeton || !/^[0-9a-f-]{36}$/i.test(jeton)) { erreur(); return; }
+
+      fetch(SUPABASE + "/rest/v1/rpc/suivi_commande", {
+        method: "POST",
+        headers: { "apikey": CLE_PUBLIQUE, "Content-Type": "application/json" },
+        body: JSON.stringify({ t: jeton })
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (s) {
+          if (!s) { erreur(); return; }
+          if (s.couleur) document.documentElement.style.setProperty("--c", s.couleur);
+          $("atelier").textContent = s.atelier;
+          $("adresse").textContent = s.adresse || "";
+          if (s.logo) { $("logo").src = s.logo; $("logo").hidden = false; $("logo-vide").hidden = true; }
+          else { $("logo-vide").textContent = (s.atelier || "?").charAt(0).toUpperCase(); }
+          $("bonjour").textContent = "Bonjour " + (s.client || "") + ", votre commande est :";
+
+          var annulee = s.statut === "annulee";
+          var idx = ETAPES.findIndex(function (e) { return e[0] === s.statut; });
+          $("statut").textContent = annulee ? "Annulée" : (ETAPES[idx] ? ETAPES[idx][1] : s.statut);
+          if (s.date_livraison && !annulee && s.statut !== "livree") {
+            $("livraison").textContent = "Livraison prévue " + date(s.date_livraison);
+          }
+          if (!annulee) {
+            ETAPES.forEach(function (e, i) {
+              var li = document.createElement("li");
+              if (i <= idx) li.className = "fait";
+              if (i === idx) li.className += " actuel";
+              li.innerHTML = '<span class="pastille">' + (i <= idx ? "✓" : "") + '</span><div><b></b><span class="gris"></span></div>';
+              li.querySelector("b").textContent = e[1];
+              li.querySelector(".gris").textContent = i === idx ? e[2] : "";
+              $("etapes").appendChild(li);
+            });
+          }
+
+          $("numero").textContent = s.numero || "";
+          (s.articles || []).forEach(function (a) {
+            var d = document.createElement("div");
+            d.className = "ligne";
+            d.innerHTML = "<span></span><span></span>";
+            d.children[0].textContent = a.designation;
+            d.children[1].textContent = "× " + a.quantite;
+            $("articles").appendChild(d);
+          });
+          if (Number(s.reste) > 0) { $("reste").textContent = argent(Number(s.reste), s.devise); $("ligne-reste").hidden = false; }
+
+          var tel = (s.telephone || "").replace(/[^0-9+]/g, "");
+          if (tel) {
+            $("contact").hidden = false;
+            $("tel").href = "tel:" + tel;
+            $("wa").href = "https://wa.me/" + tel.replace(/\D/g, "") + "?text=" +
+              encodeURIComponent("Bonjour, je vous écris au sujet de ma commande " + (s.numero || "") + ".");
+          }
+          $("chargement").hidden = true;
+          $("suivi").hidden = false;
+        })
+        .catch(erreur);
+    })();
+  </script>
+</body>
+</html>

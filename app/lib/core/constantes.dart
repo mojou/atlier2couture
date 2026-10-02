@@ -72,6 +72,36 @@ const unitesParCategorie = {
   'autre': 'pce',
 };
 
+const categoriesDepense = {
+  'tissu': 'Achat de tissu',
+  'fournitures': 'Fournitures',
+  'loyer': 'Loyer',
+  'electricite': 'Électricité / eau',
+  'transport': 'Transport',
+  'salaire': 'Salaires',
+  'materiel': 'Matériel / machines',
+  'autre': 'Autre',
+};
+
+IconData iconeDepense(String c) => switch (c) {
+      'tissu' => Icons.texture,
+      'fournitures' => Icons.inventory_2_outlined,
+      'loyer' => Icons.home_work_outlined,
+      'electricite' => Icons.bolt,
+      'transport' => Icons.local_taxi_outlined,
+      'salaire' => Icons.badge_outlined,
+      'materiel' => Icons.precision_manufacturing_outlined,
+      _ => Icons.receipt_outlined,
+    };
+
+const categoriesPhoto = {
+  'modele': 'Modèle souhaité',
+  'tissu': 'Tissu déposé',
+  'essayage': 'Essayage',
+  'resultat': 'Vêtement fini',
+  'autre': 'Autre',
+};
+
 const statutsDocument = {
   'brouillon': 'Brouillon',
   'envoye': 'Envoyé',
