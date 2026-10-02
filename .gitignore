@@ -1,0 +1,12 @@
+# Livrables générés (recréés par preparer-site.ps1)
+/site-web/
+/site-web.zip
+/AtelierCouture.apk
+
+# Configuration locale de l'application (voir app/config.example.json)
+/app/config.json
+
+# Réglages locaux de l'éditeur / de Claude Code
+/.claude/
+.vscode/
+*.log

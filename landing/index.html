@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atelier Couture · La gestion d'atelier pensée pour les couturiers</title>
+  <meta name="description" content="Commandes, mesures, calcul automatique du métrage zone par zone, factures avec votre logo, stock et rendez-vous avec alarme. Gratuit pour démarrer, paiement Mobile Money.">
+  <meta property="og:title" content="Atelier Couture · Votre atelier, enfin organisé">
+  <meta property="og:description" content="Du métrage exact à la facture avec votre logo : l'application des ateliers de couture.">
+  <meta name="theme-color" content="#5b1f6b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235b1f6b'/%3E%3Cpath d='M20 44 44 20M44 44 20 20' stroke='%23e9b949' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='46' r='6' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Ccircle cx='46' cy='46' r='6' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --prune: #5b1f6b;
+      --prune-2: #7b2d8e;
+      --prune-clair: #f3e8f6;
+      --or: #e9b949;
+      --or-fonce: #b7861b;
+      --creme: #fbf7f1;
+      --papier: #ffffff;
+      --encre: #22172a;
+      --gris: #6b6272;
+      --trait: #eadfe9;
+      --ombre: 0 20px 50px -20px rgba(59, 16, 72, .35);
+      --rayon: 20px;
+      --fond: var(--creme);
+      --carte: var(--papier);
+      --texte: var(--encre);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0;
+        --trait: #33273b; --prune-clair: #2c1d33;
+      }
+    }
+    :root[data-theme="dark"] {
+      --fond: #150e19; --carte: #1f1625; --texte: #f4ecf6; --gris: #b9aec0;
+      --trait: #33273b; --prune-clair: #2c1d33;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--fond); color: var(--texte);
+      font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; }
+    h1, h2, h3 { font-family: Fraunces, Georgia, serif; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+    .conteneur { width: min(1160px, 100% - 32px); margin-inline: auto; }
+    .sur-titre {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--prune-2);
+    }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sur-titre { color: var(--or); } }
+    .sur-titre::before { content: ""; width: 22px; height: 2px; background: var(--or); border-radius: 2px; }
+
+    /* Boutons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 22px; border-radius: 999px; font-weight: 600; text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease; border: 0; cursor: pointer;
+      font-size: 15px; white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-principal { background: var(--prune); color: #fff; box-shadow: 0 10px 24px -10px rgba(91, 31, 107, .7); }
+    .btn-principal:hover { background: var(--prune-2); }
+    .btn-or { background: var(--or); color: #2b1a05; box-shadow: 0 10px 24px -10px rgba(183, 134, 27, .8); }
+    .btn-contour { background: transparent; color: var(--texte); border: 1.5px solid var(--trait); }
+    .btn-contour:hover { border-color: var(--prune-2); }
+
+    /* Navigation */
+    .nav {
+      position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(160%) blur(14px);
+      background: color-mix(in srgb, var(--fond) 82%, transparent); border-bottom: 1px solid var(--trait);
+    }
+    .nav .conteneur { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 16px; }
+    .marque { display: flex; align-items: center; gap: 10px; font-family: Fraunces, serif; font-weight: 700; font-size: 20px; text-decoration: none; }
+    .marque-icone { width: 36px; height: 36px; border-radius: 10px; background: var(--prune); display: grid; place-items: center; }
+    .liens { display: flex; gap: 28px; align-items: center; }
+    .liens a { text-decoration: none; color: var(--gris); font-weight: 500; font-size: 15px; }
+    .liens a:hover { color: var(--texte); }
+    .nav .btn { padding: 10px 18px; }
+    .burger { display: none; background: none; border: 0; padding: 8px; color: var(--texte); cursor: pointer; }
+    @media (max-width: 860px) {
+      .liens { display: none; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; gap: 0;
+               background: var(--carte); border-bottom: 1px solid var(--trait); padding: 8px 16px 16px; }
+      .liens.ouvert { display: flex; }
+      .liens a { padding: 12px 0; width: 100%; border-bottom: 1px solid var(--trait); }
+      .burger { display: block; }
+      .nav .btn-nav { display: none; }
+    }
+
+    /* Hero */
+    .hero { position: relative; padding: 72px 0 40px; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: -30% -10% auto auto; width: 720px; height: 720px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(233, 185, 73, .28), transparent 70%); z-index: -1;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: auto auto -40% -20%; width: 640px; height: 640px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(123, 45, 142, .20), transparent 70%); z-index: -1;
+    }
+    .hero .conteneur { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+    .hero h1 { font-size: clamp(38px, 6vw, 64px); margin: 18px 0 20px; }
+    .hero h1 em { font-style: italic; color: var(--prune-2); }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero h1 em { color: var(--or); } }
+    .hero p.lead { font-size: 19px; color: var(--gris); max-width: 540px; margin: 0 0 28px; }
+    .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .rassurance { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 26px; color: var(--gris); font-size: 14px; }
+    .rassurance span { display: inline-flex; align-items: center; gap: 6px; }
+    .rassurance svg { color: #2e9e6b; }
+    @media (max-width: 960px) { .hero .conteneur { grid-template-columns: 1fr; } .hero { padding-top: 48px; } }
+
+    /* Téléphone */
+    .telephone-zone { position: relative; display: grid; place-items: center; min-height: 560px; }
+    .telephone {
+      width: 300px; height: 610px; border-radius: 46px; background: #1b1320; padding: 12px;
+      box-shadow: var(--ombre), 0 0 0 2px #3a2a42 inset; position: relative; transform: rotate(-3deg);
+    }
+    .ecran { width: 100%; height: 100%; border-radius: 36px; background: #fbf7f1; overflow: hidden; color: #22172a; position: relative; }
+    .encoche { position: absolute; top: 10px; left: 50%; translate: -50% 0; width: 90px; height: 24px; border-radius: 20px; background: #1b1320; z-index: 2; }
+    .app-barre { background: var(--prune); color: #fff; padding: 44px 18px 14px; font-weight: 600; font-size: 15px; }
+    .app-barre small { display: block; font-weight: 400; opacity: .8; font-size: 12px; }
+    .app-corps { padding: 12px; display: grid; gap: 10px; }
+    .resultat { background: #efe1f3; border-radius: 16px; padding: 12px 14px; }
+    .resultat .t { font-size: 11px; color: #5d4c66; }
+    .resultat .v { font-family: Fraunces, serif; font-size: 22px; font-weight: 700; color: #3c1247; }
+    .resultat .s { font-size: 11px; color: #5d4c66; }
+    .plan { background: #fff; border-radius: 16px; padding: 10px; box-shadow: 0 1px 0 #eadfe9; }
+    .plan .t { font-size: 11px; font-weight: 600; margin-bottom: 6px; color: #5d4c66; }
+    .puces { display: flex; gap: 6px; flex-wrap: wrap; }
+    .puce { font-size: 10.5px; background: #fff; border: 1px solid #eadfe9; border-radius: 999px; padding: 4px 8px; }
+    .flottant {
+      position: absolute; background: var(--carte); border: 1px solid var(--trait); border-radius: 16px;
+      padding: 12px 14px; box-shadow: var(--ombre); font-size: 13px; display: flex; gap: 10px; align-items: center;
+      animation: flotter 6s ease-in-out infinite;
+    }
+    .flottant b { display: block; font-size: 14px; }
+    .flottant .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+    .f1 { top: 60px; left: -10px; }
+    .f2 { bottom: 70px; right: -6px; animation-delay: -3s; }
+    @keyframes flotter { 50% { transform: translateY(-10px); } }
+    @media (max-width: 520px) { .f1 { left: 0; top: 20px; } .f2 { right: 0; } .telephone { transform: scale(.92) rotate(-3deg); } }
+    @media (prefers-reduced-motion: reduce) { .flottant { animation: none; } html { scroll-behavior: auto; } }
+
+    /* Bande de confiance */
+    .confiance { padding: 26px 0; border-block: 1px solid var(--trait); }
+    .confiance .conteneur { display: flex; flex-wrap: wrap; gap: 14px 36px; justify-content: center; align-items: center; color: var(--gris); font-weight: 600; }
+    .confiance span { display: inline-flex; align-items: center; gap: 8px; }
+    .point { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Sections */
+    section { padding: 96px 0; }
+    .entete { max-width: 680px; margin-bottom: 48px; }
+    .entete.centre { margin-inline: auto; text-align: center; }
+    .entete h2 { font-size: clamp(30px, 4vw, 44px); margin: 14px 0 14px; }
+    .entete p { color: var(--gris); font-size: 18px; margin: 0; }
+
+    .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 960px) { .grille { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 620px) { .grille { grid-template-columns: 1fr; } }
+    .carte {
+      background: var(--carte); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 26px;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .carte:hover { transform: translateY(-4px); box-shadow: var(--ombre); border-color: transparent; }
+    .carte h3 { font-size: 21px; margin: 16px 0 8px; }
+    .carte p { color: var(--gris); margin: 0; font-size: 15.5px; }
+    .icone { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: var(--prune-clair); color: var(--prune-2); }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .icone { color: var(--or); } }
+
+    /* Mise en avant du calcul */
+    .vedette { background: linear-gradient(160deg, #3c1247 0%, #5b1f6b 55%, #7b2d8e 100%); color: #fff; border-radius: 32px; padding: 56px; position: relative; overflow: hidden; }
+    .vedette::after { content: ""; position: absolute; right: -120px; top: -120px; width: 380px; height: 380px; border-radius: 50%; border: 60px solid rgba(233, 185, 73, .12); }
+    .vedette .conteneur-int { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; position: relative; z-index: 1; }
+    .vedette h2 { font-size: clamp(30px, 4vw, 44px); margin: 14px 0 16px; }
+    .vedette .sur-titre { color: var(--or); }
+    .vedette p { color: rgba(255, 255, 255, .82); font-size: 17px; }
+    .etapes { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 14px; }
+    .etapes li { display: flex; gap: 14px; align-items: flex-start; }
+    .etapes .num { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--or); color: #2b1a05; display: grid; place-items: center; font-weight: 700; }
+    .etapes b { display: block; }
+    .etapes span { color: rgba(255, 255, 255, .75); font-size: 15px; }
+    .tissu { background: #fbf7f1; border-radius: 20px; padding: 18px; color: #22172a; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .6); }
+    .tissu .ligne { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .tissu .ligne b { font-family: Fraunces, serif; font-size: 26px; color: #3c1247; }
+    @media (max-width: 900px) { .vedette { padding: 32px 22px; } .vedette .conteneur-int { grid-template-columns: 1fr; } }
+
+    /* Comment ça marche */
+    .parcours { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: etape; }
+    .parcours .carte { position: relative; padding-top: 34px; }
+    .parcours .carte::before {
+      counter-increment: etape; content: counter(etape); position: absolute; top: -18px; left: 26px;
+      width: 40px; height: 40px; border-radius: 12px; background: var(--prune); color: #fff; display: grid; place-items: center;
+      font-weight: 700; font-family: Fraunces, serif; font-size: 18px;
+    }
+    @media (max-width: 860px) { .parcours { grid-template-columns: 1fr; gap: 34px; } }
+
+    /* Tarifs */
+    .tarifs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 960px) { .tarifs { grid-template-columns: 1fr; max-width: 460px; margin-inline: auto; } }
+    .offre { background: var(--carte); border: 1px solid var(--trait); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; position: relative; }
+    .offre.vedette-offre { border: 2px solid var(--prune-2); box-shadow: var(--ombre); }
+    .badge { position: absolute; top: -14px; left: 50%; translate: -50% 0; background: var(--or); color: #2b1a05; font-weight: 700; font-size: 12.5px; padding: 6px 14px; border-radius: 999px; white-space: nowrap; }
+    .offre h3 { font-size: 24px; }
+    .offre .desc { color: var(--gris); font-size: 15px; margin: 6px 0 18px; min-height: 48px; }
+    .prix { display: flex; align-items: baseline; gap: 8px; margin-bottom: 22px; }
+    .prix b { font-family: Fraunces, serif; font-size: 44px; line-height: 1; }
+    .prix span { color: var(--gris); font-size: 15px; }
+    .offre ul { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 11px; flex: 1; }
+    .offre li { display: flex; gap: 10px; font-size: 15.5px; }
+    .offre li svg { flex: none; color: var(--prune-2); margin-top: 3px; }
+    .offre li.non { color: var(--gris); }
+    .offre li.non svg { color: var(--gris); }
+    .offre .btn { width: 100%; }
+    .note-tarifs { text-align: center; color: var(--gris); margin-top: 28px; font-size: 14.5px; }
+
+    /* FAQ */
+    .faq { max-width: 780px; margin-inline: auto; display: grid; gap: 12px; }
+    details { background: var(--carte); border: 1px solid var(--trait); border-radius: 16px; padding: 4px 22px; }
+    summary { cursor: pointer; list-style: none; padding: 18px 0; font-weight: 600; font-size: 17px; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-size: 24px; line-height: 1; color: var(--prune-2); transition: transform .2s ease; }
+    details[open] summary::after { transform: rotate(45deg); }
+    details p { margin: 0 0 18px; color: var(--gris); }
+
+    /* Appel final */
+    .final { text-align: center; background: var(--prune-clair); border-radius: 32px; padding: 64px 24px; }
+    .final h2 { font-size: clamp(30px, 4.5vw, 48px); max-width: 720px; margin: 0 auto 16px; }
+    .final p { color: var(--gris); font-size: 18px; margin: 0 auto 28px; max-width: 560px; }
+    .final .ctas { justify-content: center; }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--trait); color: var(--gris); font-size: 14px; }
+    footer .conteneur { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+    footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--texte); }
+
+    .whatsapp-flottant {
+      position: fixed; right: 18px; bottom: 18px; z-index: 30; width: 58px; height: 58px; border-radius: 50%;
+      background: #25d366; color: #fff; display: grid; place-items: center; box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .45);
+      transition: transform .15s ease;
+    }
+    .whatsapp-flottant:hover { transform: scale(1.07); }
+
+    .apparition { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+    .apparition.visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .apparition { opacity: 1; transform: none; transition: none; } }
+  </style>
+</head>
+<body>
+  <!-- Réglages de la page : liens de l'application et contact (laisser vide pour masquer). -->
+  <script>
+    window.CONFIG = {
+      lienApplication: "app/",
+      lienAndroid: "AtelierCouture.apk",
+      whatsapp: "237676143353",   // indicatif pays, sans + ni espaces
+      email: "germbob96@gmail.com",
+    };
+  </script>
+
+  <header class="nav">
+    <div class="conteneur">
+      <a class="marque" href="#">
+        <span class="marque-icone" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e9b949" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="18" r="3" stroke="#fff"/><circle cx="18" cy="18" r="3" stroke="#fff"/><path d="M8.2 15.8 19 4M15.8 15.8 5 4"/></svg>
+        </span>
+        Atelier Couture
+      </a>
+      <nav class="liens" id="liens" aria-label="Navigation principale">
+        <a href="#fonctions">Fonctionnalités</a>
+        <a href="#metrage">Calcul du métrage</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#faq">Questions</a>
+        <a href="#" data-lien="app">Se connecter</a>
+      </nav>
+      <a class="btn btn-principal btn-nav" href="#" data-lien="app">Commencer gratuitement</a>
+      <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <div class="hero">
+      <div class="conteneur">
+        <div>
+          <span class="sur-titre">Pour les ateliers de couture</span>
+          <h1>Votre atelier,<br>enfin <em>parfaitement</em> organisé.</h1>
+          <p class="lead">Mesures, métrage exact zone par zone, commandes, factures avec votre logo, stock et rendez-vous : tout votre atelier dans une seule application, sur téléphone et ordinateur.</p>
+          <div class="ctas">
+            <a class="btn btn-principal" href="#" data-lien="app">
+              Commencer gratuitement
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn-contour" href="#" data-lien="android">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22a11.5 11.5 0 0 0-9.84 0L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52M7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5m10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5"/></svg>
+              Application Android
+            </a>
+          </div>
+          <div class="rassurance">
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Gratuit pour démarrer</span>
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Sans carte bancaire</span>
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Paiement Mobile Money</span>
+          </div>
+        </div>
+
+        <div class="telephone-zone" aria-hidden="true">
+          <div class="telephone">
+            <div class="ecran">
+              <div class="encoche"></div>
+              <div class="app-barre">Calcul du métrage<small>Grand boubou + pantalon · Aïcha N.</small></div>
+              <div class="app-corps">
+                <div class="resultat">
+                  <div class="t">Tissu principal · largeur 150 cm</div>
+                  <div class="v">À demander : 5,75 yd</div>
+                  <div class="s">Marge de sécurité comprise · tissu utilisé à 82 %</div>
+                </div>
+                <div class="plan">
+                  <div class="t">Plan de coupe</div>
+                  <svg viewBox="0 0 150 190" width="100%" role="img">
+                    <rect x="0" y="0" width="150" height="190" rx="4" fill="#f1ede4"/>
+                    <rect x="2" y="2" width="72" height="92" rx="2" fill="#ffe082" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="76" y="2" width="72" height="92" rx="2" fill="#81d4fa" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="2" y="96" width="38" height="66" rx="2" fill="#c5e1a5" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="42" y="96" width="38" height="66" rx="2" fill="#c5e1a5" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="82" y="96" width="30" height="72" rx="2" fill="#f8bbd0" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="114" y="96" width="34" height="40" rx="2" fill="#b39ddb" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="114" y="138" width="34" height="14" rx="2" fill="#ffcc80" stroke="#5d4c66" stroke-width=".6"/>
+                    <rect x="2" y="164" width="60" height="12" rx="2" fill="#80cbc4" stroke="#5d4c66" stroke-width=".6"/>
+                    <line x1="0" y1="91" x2="150" y2="91" stroke="#e53935" stroke-dasharray="3 3" stroke-width=".8"/>
+                    <text x="147" y="88" font-size="6" text-anchor="end" fill="#e53935" font-family="Inter" font-weight="700">1 yd</text>
+                    <text x="38" y="50" font-size="7" text-anchor="middle" fill="#3c1247" font-family="Inter">Devant</text>
+                    <text x="112" y="50" font-size="7" text-anchor="middle" fill="#3c1247" font-family="Inter">Dos</text>
+                    <text x="21" y="130" font-size="6" text-anchor="middle" fill="#3c1247" font-family="Inter">Jambe</text>
+                    <text x="61" y="130" font-size="6" text-anchor="middle" fill="#3c1247" font-family="Inter">Jambe</text>
+                    <text x="97" y="134" font-size="6" text-anchor="middle" fill="#3c1247" font-family="Inter">Dos</text>
+                    <text x="131" y="118" font-size="5.5" text-anchor="middle" fill="#3c1247" font-family="Inter">Plastron</text>
+                  </svg>
+                </div>
+                <div class="puces">
+                  <span class="puce">Devant 88 × 83,5</span>
+                  <span class="puce">Dos 88 × 83,5</span>
+                  <span class="puce">Ceinture 94 × 11</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flottant f1">
+            <span class="ico" style="background:#e7f6ee;color:#2e9e6b">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+            </span>
+            <div><b>Commande CMD-0042 prête</b>Client prévenu sur WhatsApp</div>
+          </div>
+          <div class="flottant f2">
+            <span class="ico" style="background:#fdf3dc;color:#b7861b">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg>
+            </span>
+            <div><b>Essayage à 15 h</b>L'alarme joue votre musique</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confiance -->
+    <div class="confiance">
+      <div class="conteneur">
+        <span><i class="point" style="background:#ff7900"></i>Orange Money</span>
+        <span><i class="point" style="background:#ffcb05"></i>MTN MoMo</span>
+        <span><i class="point" style="background:#1dc4ff"></i>Wave</span>
+        <span><i class="point" style="background:#7b2d8e"></i>Android &amp; navigateur</span>
+        <span><i class="point" style="background:#2e9e6b"></i>Données sécurisées</span>
+      </div>
+    </div>
+
+    <!-- Fonctionnalités -->
+    <section id="fonctions">
+      <div class="conteneur">
+        <div class="entete apparition">
+          <span class="sur-titre">Tout-en-un</span>
+          <h2>Tout ce dont votre atelier a besoin, rien de superflu.</h2>
+          <p>Conçu avec des couturiers, pour les réalités d'un atelier : tissu apporté par le client, acomptes, essayages, retouches et livraisons.</p>
+        </div>
+        <div class="grille">
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.3 15.3 8.7 2.7a1 1 0 0 0-1.4 0L2.7 7.3a1 1 0 0 0 0 1.4l12.6 12.6a1 1 0 0 0 1.4 0l4.6-4.6a1 1 0 0 0 0-1.4ZM7.5 10.5l2-2M10.5 13.5l2-2M13.5 16.5l2-2"/></svg></div>
+            <h3>Métrage exact, zone par zone</h3>
+            <p>Devant, dos, manches, col, ceinture… L'application calcule chaque pièce avec coutures et ourlets, dessine le plan de coupe et donne les yards à demander.</p>
+          </article>
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 14l2 2 4-4"/></svg></div>
+            <h3>Suivi de production</h3>
+            <p>Nouvelle, découpe, couture, essayage, finitions, prête, livrée : chaque commande avance étape par étape, avec couturier assigné et alerte de retard.</p>
+          </article>
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5"/></svg></div>
+            <h3>Devis et factures élégants</h3>
+            <p>Votre logo, vos coordonnées, 5 modèles au choix, montant en toutes lettres, acomptes et reste à payer. Partage en PDF sur WhatsApp en un geste.</p>
+          </article>
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <h3>Clients et mesures</h3>
+            <p>Fiche client, historique des mesures et contrôle des valeurs incohérentes pour éviter les erreurs avant même de couper.</p>
+          </article>
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg></div>
+            <h3>Rendez-vous en musique</h3>
+            <p>Prises de mesures, essayages, livraisons : l'alarme joue la musique de votre choix à l'heure voulue, et le client reçoit un rappel WhatsApp.</p>
+          </article>
+          <article class="carte apparition">
+            <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 8V21H3V8M1 3h22v5H1zM10 12h4"/></svg></div>
+            <h3>Stock sous contrôle</h3>
+            <p>Tissus, doublures, boutons, fermetures : entrées, sorties, inventaire et alerte de stock bas. Le tissu est déduit automatiquement à la découpe.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mise en avant : le métrage -->
+    <section id="metrage" style="padding-top:0">
+      <div class="conteneur">
+        <div class="vedette apparition">
+          <div class="conteneur-int">
+            <div>
+              <span class="sur-titre">Zéro gaspillage</span>
+              <h2>Fini les erreurs de coupe et le tissu qui manque.</h2>
+              <p>Plus besoin de deviner combien de yards demander. Entrez les mesures, choisissez le modèle : l'application fait le reste, avec une marge de sécurité.</p>
+              <ol class="etapes">
+                <li><span class="num">1</span><div><b>Mesures du client</b><span>Poitrine, taille, bassin, longueurs… avec contrôle des erreurs.</span></div></li>
+                <li><span class="num">2</span><div><b>Choix du vêtement</b><span>Chemise, robe, boubou, pantalon, veste, ensemble ou modèle libre.</span></div></li>
+                <li><span class="num">3</span><div><b>Métrage et fiche de découpe</b><span>Quantité à acheter, plan de coupe et fiche PDF pour le couturier.</span></div></li>
+              </ol>
+            </div>
+            <div class="tissu">
+              <div class="ligne"><span>Tissu principal (150 cm)</span><b>5,75 yd</b></div>
+              <div class="ligne"><span>Doublure (150 cm)</span><b style="font-size:20px">2,25 yd</b></div>
+              <div class="ligne" style="margin-bottom:14px"><span>Soit en pagnes de 6 yards</span><b style="font-size:20px">1 pagne</b></div>
+              <svg viewBox="0 0 300 150" width="100%" role="img" aria-label="Exemple de plan de coupe">
+                <rect width="300" height="150" rx="8" fill="#f1ede4"/>
+                <g stroke="#5d4c66" stroke-width=".8">
+                  <rect x="4" y="4" width="92" height="84" rx="3" fill="#ffe082"/>
+                  <rect x="100" y="4" width="92" height="84" rx="3" fill="#81d4fa"/>
+                  <rect x="196" y="4" width="46" height="60" rx="3" fill="#c5e1a5"/>
+                  <rect x="246" y="4" width="50" height="60" rx="3" fill="#c5e1a5"/>
+                  <rect x="196" y="68" width="100" height="20" rx="3" fill="#ffcc80"/>
+                  <rect x="4" y="92" width="60" height="54" rx="3" fill="#f8bbd0"/>
+                  <rect x="68" y="92" width="60" height="54" rx="3" fill="#f8bbd0"/>
+                  <rect x="132" y="92" width="80" height="24" rx="3" fill="#b39ddb"/>
+                  <rect x="132" y="120" width="80" height="26" rx="3" fill="#80cbc4"/>
+                </g>
+                <g font-family="Inter" font-size="10" fill="#3c1247" text-anchor="middle">
+                  <text x="50" y="50">Devant</text><text x="146" y="50">Dos</text>
+                  <text x="219" y="38">Manche</text><text x="271" y="38">Manche</text>
+                  <text x="246" y="82">Ceinture</text><text x="34" y="123">Jambe</text><text x="98" y="123">Jambe</text>
+                  <text x="172" y="108">Col</text><text x="172" y="137">Poignets</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comment ça marche -->
+    <section style="padding-top:24px">
+      <div class="conteneur">
+        <div class="entete centre apparition">
+          <span class="sur-titre">Démarrage en 2 minutes</span>
+          <h2>Simple dès le premier jour.</h2>
+        </div>
+        <div class="parcours">
+          <div class="carte apparition"><h3>Créez votre atelier</h3><p>Nom, logo, téléphone, devise et unité (yards ou mètres). Vos factures portent immédiatement votre identité.</p></div>
+          <div class="carte apparition"><h3>Ajoutez vos clients</h3><p>Prenez les mesures une fois : elles servent à tous les calculs de métrage et restent dans l'historique.</p></div>
+          <div class="carte apparition"><h3>Encaissez sereinement</h3><p>Commande, facture, acompte et reste à payer : l'application suit tout, vous vous concentrez sur la couture.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tarifs -->
+    <section id="tarifs" style="padding-top:40px">
+      <div class="conteneur">
+        <div class="entete centre apparition">
+          <span class="sur-titre">Tarifs</span>
+          <h2>Commencez gratuitement, évoluez quand vous voulez.</h2>
+          <p>Sans engagement. Paiement par Orange Money, MTN MoMo, Wave et autres portefeuilles mobiles.</p>
+        </div>
+        <div class="tarifs">
+          <div class="offre apparition">
+            <h3>Gratuit</h3>
+            <p class="desc">Pour découvrir l'application et les petits ateliers.</p>
+            <div class="prix"><b>0</b><span>FCFA / mois</span></div>
+            <ul>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>1 utilisateur</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>30 clients, 15 commandes par mois</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Calculateur de métrage et fiche de découpe</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Factures modèle Classique</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Rendez-vous</li>
+              <li class="non"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>Stock et alarmes musicales</li>
+            </ul>
+            <a class="btn btn-contour" href="#" data-lien="app">Commencer gratuitement</a>
+          </div>
+          <div class="offre vedette-offre apparition">
+            <span class="badge">Le plus choisi</span>
+            <h3>Standard</h3>
+            <p class="desc">Pour l'atelier qui tourne tous les jours avec une petite équipe.</p>
+            <div class="prix"><b>5 000</b><span>FCFA / mois</span></div>
+            <ul>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>3 utilisateurs</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Clients et commandes illimités</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>5 modèles de facture, sans mention</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Stock complet et alertes</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Alarmes musicales des rendez-vous</li>
+            </ul>
+            <a class="btn btn-principal" href="#" data-lien="app">Choisir Standard</a>
+          </div>
+          <div class="offre apparition">
+            <h3>Premium</h3>
+            <p class="desc">Pour les maisons de couture et plusieurs boutiques.</p>
+            <div class="prix"><b>10 000</b><span>FCFA / mois</span></div>
+            <ul>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Utilisateurs illimités</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Tout le contenu Standard</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Plusieurs ateliers / boutiques</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Rappels WhatsApp groupés</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Statistiques avancées</li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Support prioritaire</li>
+            </ul>
+            <a class="btn btn-or" href="#" data-lien="app">Choisir Premium</a>
+          </div>
+        </div>
+        <p class="note-tarifs apparition">Paiement pour 1, 3, 6 ou 12 mois · FCFA (XOF et XAF) · Changez de formule à tout moment depuis l'application.</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" style="padding-top:24px">
+      <div class="conteneur">
+        <div class="entete centre apparition">
+          <span class="sur-titre">Questions fréquentes</span>
+          <h2>Vous vous posez des questions ?</h2>
+        </div>
+        <div class="faq">
+          <details class="apparition"><summary>Faut-il savoir utiliser un ordinateur ?</summary><p>Non. L'application fonctionne sur un simple téléphone Android et dans un navigateur. Tout est en français, avec de grands boutons et des étapes guidées.</p></details>
+          <details class="apparition"><summary>Le calcul du métrage est-il fiable ?</summary><p>Il suit les règles de coupe standard : chaque pièce est calculée avec coutures, ourlets et aisance, puis placée sur la largeur réelle de votre tissu avec une marge de sécurité. Chaque dimension reste modifiable si vous avez vos propres habitudes.</p></details>
+          <details class="apparition"><summary>Mes données sont-elles protégées ?</summary><p>Chaque atelier est isolé : personne d'autre ne voit vos clients, commandes ou factures. Les données sont hébergées de façon sécurisée et sauvegardées.</p></details>
+          <details class="apparition"><summary>Comment se passe le paiement ?</summary><p>Depuis l'application, choisissez votre formule et votre durée, puis payez par Mobile Money (Orange Money, MTN MoMo, Wave…) sur une page sécurisée. La formule s'active aussitôt.</p></details>
+          <details class="apparition"><summary>Puis-je travailler à plusieurs ?</summary><p>Oui : propriétaire, gérant, couturiers et caissiers ont chacun leur accès. 3 utilisateurs en Standard, illimité en Premium.</p></details>
+          <details class="apparition"><summary>Et si j'arrête de payer ?</summary><p>Votre atelier repasse simplement en formule Gratuite : vos données sont conservées et vous pouvez reprendre un abonnement quand vous voulez.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appel final -->
+    <section style="padding-top:24px">
+      <div class="conteneur">
+        <div class="final apparition">
+          <h2>Coupez juste. Livrez à l'heure. Encaissez sans oubli.</h2>
+          <p>Rejoignez les ateliers qui ont remplacé le cahier par Atelier Couture. C'est gratuit pour commencer.</p>
+          <div class="ctas">
+            <a class="btn btn-principal" href="#" data-lien="app">Créer mon atelier gratuitement</a>
+            <a class="btn btn-contour" href="#" data-lien="whatsapp" target="_blank" rel="noopener" hidden>Nous écrire sur WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <a class="whatsapp-flottant" href="#" data-lien="whatsapp" target="_blank" rel="noopener" aria-label="Nous écrire sur WhatsApp" hidden>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35M12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.43 9.88-9.88 9.88m8.41-18.29A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.41"/></svg>
+  </a>
+
+  <footer>
+    <div class="conteneur">
+      <span>© <span id="annee"></span> Atelier Couture</span>
+      <nav>
+        <a href="#fonctions">Fonctionnalités</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#faq">Questions</a>
+        <a href="#" data-lien="android">Android</a>
+        <a href="#" data-lien="email" hidden>Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var c = window.CONFIG;
+      var liens = {
+        app: c.lienApplication,
+        android: c.lienAndroid,
+        whatsapp: c.whatsapp ? "https://wa.me/" + c.whatsapp.replace(/\D/g, "") + "?text=" +
+          encodeURIComponent("Bonjour, je souhaite en savoir plus sur Atelier Couture.") : "",
+        email: c.email ? "mailto:" + c.email : "",
+      };
+      document.querySelectorAll("[data-lien]").forEach(function (a) {
+        var url = liens[a.dataset.lien];
+        if (url) { a.href = url; a.hidden = false; } else if (a.dataset.lien !== "app") { a.hidden = true; }
+        if (a.dataset.lien === "android" && url) a.setAttribute("download", "");
+      });
+
+      document.getElementById("annee").textContent = new Date().getFullYear();
+
+      var burger = document.getElementById("burger");
+      var menu = document.getElementById("liens");
+      burger.addEventListener("click", function () {
+        var ouvert = menu.classList.toggle("ouvert");
+        burger.setAttribute("aria-expanded", ouvert);
+      });
+      menu.querySelectorAll("a").forEach(function (a) {
+        a.addEventListener("click", function () { menu.classList.remove("ouvert"); burger.setAttribute("aria-expanded", "false"); });
+      });
+
+      if ("IntersectionObserver" in window) {
+        var obs = new IntersectionObserver(function (entrees) {
+          entrees.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); } });
+        }, { threshold: .12 });
+        document.querySelectorAll(".apparition").forEach(function (el) { obs.observe(el); });
+      } else {
+        document.querySelectorAll(".apparition").forEach(function (el) { el.classList.add("visible"); });
+      }
+    })();
+  </script>
+</body>
+</html>
