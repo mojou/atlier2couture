@@ -299,6 +299,51 @@ class _AbonnementScreenState extends State<AbonnementScreen> with WidgetsBinding
   }
 }
 
+/// Écran affiché à la place d'une fonction non incluse dans la formule actuelle.
+class EcranVerrouille extends StatelessWidget {
+  const EcranVerrouille({super.key, required this.titre, required this.message, required this.icone, this.premium = false});
+
+  final String titre;
+  final String message;
+  final IconData icone;
+  final bool premium;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(titre)),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(28),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Stack(alignment: Alignment.bottomRight, children: [
+                CircleAvatar(radius: 44, backgroundColor: t.colorScheme.primaryContainer, child: Icon(icone, size: 44)),
+                const CircleAvatar(radius: 16, backgroundColor: Colors.amber, child: Icon(Icons.lock, size: 18, color: Colors.white)),
+              ]),
+              const SizedBox(height: 18),
+              Text(titre, textAlign: TextAlign.center, style: t.textTheme.headlineSmall),
+              const SizedBox(height: 10),
+              Text(message, textAlign: TextAlign.center),
+              const SizedBox(height: 10),
+              Text('Inclus dans la formule ${premium ? 'Premium (10 000 FCFA / mois)' : 'Standard (5 000 FCFA / mois)'}.',
+                  textAlign: TextAlign.center, style: t.textTheme.titleSmall),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AbonnementScreen())),
+                icon: const Icon(Icons.workspace_premium),
+                label: const Text('Voir les formules'),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Explique une fonction réservée à une formule supérieure et propose de changer.
 Future<void> proposerFormule(BuildContext context, String message) async {
   final voir = await showDialog<bool>(

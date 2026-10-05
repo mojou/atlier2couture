@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/config.dart';
 import 'abonnement_screen.dart';
+import 'assistant_screen.dart';
 import 'caisse_screen.dart';
 import 'exports_screen.dart';
 import 'paie_screen.dart';
@@ -76,6 +77,13 @@ class _PlusScreenState extends State<PlusScreen> {
       appBar: AppBar(title: const Text('Plus')),
       body: ListView(children: [
         ListTile(
+          leading: const Icon(Icons.smart_toy_outlined, color: Colors.deepPurple),
+          title: const Text('Assistant'),
+          subtitle: const Text('Une question sur l\'application ? Demandez ici'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _ouvrir(const AssistantScreen()),
+        ),
+        ListTile(
           leading: const Icon(Icons.workspace_premium, color: Colors.amber),
           title: const Text('Mon abonnement'),
           subtitle: Text('Formule ${o.nom}'
@@ -139,20 +147,25 @@ class _PlusScreenState extends State<PlusScreen> {
           leading: const Icon(Icons.account_balance_wallet_outlined),
           title: const Text('Caisse et dépenses'),
           subtitle: const Text('Encaissements, dépenses et bénéfice du mois'),
-          onTap: () => _ouvrir(const CaisseScreen()),
+          trailing: _cadenas(o.caisse),
+          onTap: () => _ouvrirSi(o.caisse, 'La caisse et le suivi des dépenses sont inclus à partir de la formule Standard.',
+              const CaisseScreen()),
         ),
         if (s.estGestionnaire)
           ListTile(
             leading: const Icon(Icons.badge_outlined),
             title: const Text('Paie des couturiers'),
             subtitle: const Text('À la pièce ou au pourcentage de la façon'),
-            onTap: () => _ouvrir(const PaieScreen()),
+            trailing: _cadenas(o.paie),
+            onTap: () => _ouvrirSi(o.paie, 'La paie des couturiers est incluse dans la formule Premium.', const PaieScreen()),
           ),
         ListTile(
           leading: const Icon(Icons.file_download_outlined),
           title: const Text('Exporter mes données'),
           subtitle: const Text('Clients, commandes, factures… vers Excel'),
-          onTap: () => _ouvrir(const ExportsScreen()),
+          trailing: _cadenas(o.exports),
+          onTap: () => _ouvrirSi(o.exports, 'L\'export Excel de vos données est inclus à partir de la formule Standard.',
+              const ExportsScreen()),
         ),
         const Divider(),
         ListTile(

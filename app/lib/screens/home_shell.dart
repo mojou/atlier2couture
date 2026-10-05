@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
 import '../core/session.dart';
 import '../core/supa.dart';
+import 'abonnement_screen.dart';
 import 'clients_screen.dart';
 import 'commandes_screen.dart';
 import 'dashboard_screen.dart';
@@ -69,6 +70,7 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Future<void> _compterNonLus() async {
+    if (!Session.instance.offre.messagerie) return;
     try {
       final n = await supa.rpc('messagerie_non_lus', params: {'a': Session.instance.atelierId});
       if (mounted) setState(() => _nonLus = (n as num?)?.toInt() ?? 0);
@@ -93,7 +95,14 @@ class _HomeShellState extends State<HomeShell> {
         1 => const CommandesScreen(),
         2 => const ClientsScreen(),
         3 => const RendezVousScreen(),
-        4 => const MessagerieScreen(),
+        4 => Session.instance.offre.messagerie
+            ? const MessagerieScreen()
+            : const EcranVerrouille(
+                titre: 'Messagerie interne',
+                message: 'Échangez avec votre équipe en temps réel : canal de l\'atelier, messages privés '
+                    'et discussion sur chaque commande.',
+                icone: Icons.forum_outlined,
+              ),
         _ => const PlusScreen(),
       };
 

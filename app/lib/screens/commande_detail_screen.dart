@@ -10,6 +10,7 @@ import '../core/supa.dart';
 import '../core/widgets.dart';
 import '../models/article_commande.dart';
 import '../pdf/documents_pdf.dart';
+import 'abonnement_screen.dart';
 import 'client_detail_screen.dart';
 import 'document_detail_screen.dart';
 import 'messagerie_screen.dart';
@@ -125,6 +126,12 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
   }
 
   Future<void> _envoyerSuivi(Map<String, dynamic> c) async {
+    if (!Session.instance.offre.suiviClient) {
+      await proposerFormule(context,
+          'Le lien de suivi permet à votre client de voir l\'avancement de sa commande sans vous appeler. '
+          'Il est inclus à partir de la formule Standard.');
+      return;
+    }
     final lien = _lienSuivi(c);
     if (lien == null) {
       snack(context,
@@ -496,8 +503,10 @@ class _CommandeDetailScreenState extends State<CommandeDetailScreen> {
                   'retouches, questions… Le client ne voit pas ces messages.'),
               const SizedBox(height: 8),
               FilledButton.tonalIcon(
-                onPressed: () => ouvrirDiscussionCommande(context, c),
-                icon: const Icon(Icons.forum_outlined),
+                onPressed: () => Session.instance.offre.messagerie
+                    ? ouvrirDiscussionCommande(context, c)
+                    : proposerFormule(context, 'La messagerie interne est incluse à partir de la formule Standard.'),
+                icon: Icon(Session.instance.offre.messagerie ? Icons.forum_outlined : Icons.lock_outline),
                 label: const Text('Ouvrir la discussion'),
               ),
             ]),

@@ -9,9 +9,8 @@ class Formule {
     this.maxUtilisateurs,
     this.maxClients,
     this.maxCommandesMois,
-    this.stock = true,
-    this.alarmes = true,
-    this.tousModeles = true,
+    this.questionsAssistantJour = 10,
+    this.standard = true,
     this.premium = false,
   });
 
@@ -24,12 +23,25 @@ class Formule {
   final int? maxUtilisateurs;
   final int? maxClients;
   final int? maxCommandesMois;
-  final bool stock;
-  final bool alarmes;
-  final bool tousModeles;
+  final int questionsAssistantJour;
 
-  /// Plusieurs ateliers, statistiques avancées, rappels groupés.
+  /// Fonctions de la formule Standard : messagerie interne, photos, lien de
+  /// suivi client, stock, caisse, exports, alarmes, 5 modèles de facture.
+  final bool standard;
+
+  /// Fonctions Premium : paie des couturiers, statistiques avancées, rappels
+  /// groupés, plusieurs ateliers.
   final bool premium;
+
+  bool get messagerie => standard;
+  bool get photos => standard;
+  bool get suiviClient => standard;
+  bool get stock => standard;
+  bool get caisse => standard;
+  bool get exports => standard;
+  bool get alarmes => standard;
+  bool get tousModeles => standard;
+  bool get paie => premium;
 }
 
 const formules = <String, Formule>{
@@ -40,16 +52,16 @@ const formules = <String, Formule>{
     maxUtilisateurs: 1,
     maxClients: 30,
     maxCommandesMois: 15,
-    stock: false,
-    alarmes: false,
-    tousModeles: false,
+    questionsAssistantJour: 10,
+    standard: false,
     avantages: [
       '1 utilisateur',
-      '30 clients maximum',
+      '30 clients et leurs mesures',
       '15 commandes par mois',
-      'Calculateur de métrage et fiche de découpe',
+      'Calculateur de métrage',
       'Factures modèle Classique',
-      'Rendez-vous (sans alarme musicale)',
+      'Agenda des rendez-vous',
+      'Assistant : 10 questions par jour',
     ],
   ),
   'standard': Formule(
@@ -57,25 +69,31 @@ const formules = <String, Formule>{
     nom: 'Standard',
     prixMois: 5000,
     maxUtilisateurs: 3,
+    questionsAssistantJour: 50,
     avantages: [
       '3 utilisateurs',
       'Clients et commandes illimités',
-      'Les 5 modèles de facture, sans mention',
-      'Stock complet et alertes',
+      'Messagerie interne de l\'équipe',
+      'Photos des modèles et du tissu',
+      'Lien de suivi pour le client',
+      'Stock, caisse et exports Excel',
       'Alarmes musicales des rendez-vous',
+      '5 modèles de facture, sans mention',
     ],
   ),
   'premium': Formule(
     code: 'premium',
     nom: 'Premium',
     prixMois: 10000,
+    questionsAssistantJour: 150,
     premium: true,
     avantages: [
       'Utilisateurs illimités',
       'Tout le contenu Standard',
-      'Plusieurs ateliers / boutiques',
-      'Rappels WhatsApp groupés',
+      'Paie des couturiers',
       'Statistiques avancées',
+      'Rappels WhatsApp groupés',
+      'Plusieurs ateliers / boutiques',
       'Support prioritaire',
     ],
   ),

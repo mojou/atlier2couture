@@ -8,6 +8,7 @@ import '../core/format.dart';
 import '../core/session.dart';
 import '../core/supa.dart';
 import '../core/widgets.dart';
+import 'abonnement_screen.dart';
 
 /// Photos d'une commande (modèle souhaité, tissu déposé, essayage, vêtement fini),
 /// stockées dans le bucket privé « photos » et affichées par liens temporaires.
@@ -161,6 +162,18 @@ class _PhotosCommandeState extends State<PhotosCommande> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    if (!Session.instance.offre.photos) {
+      return Section(
+        titre: 'Photos',
+        action: TextButton.icon(
+          onPressed: () => proposerFormule(context,
+              'Les photos de commande (modèle, tissu, essayage, vêtement fini) sont incluses à partir de la formule Standard.'),
+          icon: const Icon(Icons.lock_outline),
+          label: const Text('Débloquer'),
+        ),
+        children: const [Text('Gardez la photo du modèle souhaité et du tissu déposé avec la commande.')],
+      );
+    }
     return Section(
       titre: 'Photos (${_photos.length})',
       action: TextButton.icon(

@@ -6,6 +6,7 @@ import '../core/session.dart';
 import '../core/supa.dart';
 import '../core/widgets.dart';
 import 'abonnement_screen.dart';
+import 'assistant_screen.dart';
 import 'calculateur_screen.dart';
 import 'client_form_screen.dart';
 import 'commande_detail_screen.dart';
@@ -124,6 +125,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           Expanded(child: Text(atelier['nom'] as String? ?? '', overflow: TextOverflow.ellipsis)),
         ]),
+        actions: [
+          IconButton(
+            tooltip: 'Assistant',
+            icon: const Icon(Icons.smart_toy_outlined),
+            onPressed: () => _ouvrir(const AssistantScreen()),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _recharger,
