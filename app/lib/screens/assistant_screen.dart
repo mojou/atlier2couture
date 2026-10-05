@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/session.dart';
 import '../core/supa.dart';
 import '../core/support.dart';
-import '../core/widgets.dart';
+import '../services/assistant_faq.dart';
 
 const _suggestions = [
   'Comment calculer le métrage d\'un kaba ?',
@@ -28,6 +28,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
   final _defilement = ScrollController();
   bool _attente = false;
   int? _restant;
+
+  /// Passe à true dès que l'assistant IA ne répond pas : on utilise alors la base intégrée.
+  static bool _iaIndisponible = false;
 
   @override
   void dispose() {
@@ -54,6 +57,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
       _attente = true;
     });
     _defilerEnBas();
+    if (_iaIndisponible) {
+      _repondreHorsLigne(question);
+      return;
+    }
     try {
       final r = await supa.functions.invoke('assistant', body: {
         'atelier_id': Session.instance.aAtelier ? Session.instance.atelierId : null,
@@ -64,19 +71,23 @@ class _AssistantScreenState extends State<AssistantScreen> {
         _messages.add((role: 'assistant', texte: (data?['reponse'] as String?) ?? '…'));
         _restant = (data?['restant'] as num?)?.toInt();
       });
-    } catch (e) {
-      // La question reste affichée ; on retire seulement le dernier envoi pour pouvoir réessayer.
-      if (mounted) {
-        setState(() {
-          _messages.removeLast();
-          _saisie.text = question;
-        });
-        snack(context, messageErreur(e), erreur: true);
-      }
+    } catch (_) {
+      // Assistant IA non installé, quota atteint ou pas d'internet : réponse gratuite intégrée.
+      _iaIndisponible = true;
+      if (mounted) _repondreHorsLigne(question);
     } finally {
       if (mounted) setState(() => _attente = false);
       _defilerEnBas();
     }
+  }
+
+  void _repondreHorsLigne(String question) {
+    setState(() {
+      _messages.add((role: 'assistant', texte: repondreFaq(question)));
+      _attente = false;
+      _restant = null;
+    });
+    _defilerEnBas();
   }
 
   @override
