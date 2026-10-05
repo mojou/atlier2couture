@@ -10,3 +10,6 @@
 /.claude/
 .vscode/
 *.log
+
+video/node_modules/
+video/package-lock.json

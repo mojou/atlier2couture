@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Vidéo Atelier Couture</title>
+  <!-- Film de présentation (720 × 1280, 25 s). Ouvert dans Chrome, il se joue en boucle ;
+       rendre.js le filme image par image. Version anglaise : scene.html?lang=en -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --prune: #5b1f6b; --prune-fonce: #3c1247; --prune-clair: #f3e8f6; --or: #e9b949; --creme: #fbf7f1; --encre: #22172a; --gris: #6b6272; --vert: #2e9e6b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 720px; height: 1280px; overflow: hidden; }
+    body { font-family: Inter, system-ui, sans-serif; color: var(--encre); background: var(--prune-fonce); }
+    .film { position: relative; width: 720px; height: 1280px; overflow: hidden;
+      background: radial-gradient(circle at 80% 8%, #8a3a9e 0, transparent 45%), linear-gradient(165deg, #7b2d8e 0%, var(--prune) 40%, var(--prune-fonce) 100%); }
+    .anneau { position: absolute; right: -200px; top: -160px; width: 560px; height: 560px; border-radius: 50%; border: 70px solid rgba(233,185,73,.09); }
+    .fil { position: absolute; left: 0; width: 720px; bottom: 140px; height: 40px; }
+    .abs { position: absolute; }
+
+    /* Marque */
+    .logo { left: 50%; top: 430px; width: 160px; height: 160px; margin-left: -80px; border-radius: 46px; background: var(--prune-fonce);
+      display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(233,185,73,.55), 0 30px 60px -20px rgba(0,0,0,.6); }
+    .nom { left: 0; right: 0; top: 630px; text-align: center; color: #fff; font-family: Fraunces, Georgia, serif; font-size: 64px; font-weight: 700; }
+    .slogan { left: 40px; right: 40px; top: 730px; text-align: center; color: rgba(255,255,255,.9); font-size: 30px; line-height: 1.35; }
+    .slogan em { color: var(--or); font-style: normal; font-weight: 700; }
+    .mini { left: 0; right: 0; top: 46px; display: flex; justify-content: center; align-items: center; gap: 12px; color: #fff;
+      font-family: Fraunces, Georgia, serif; font-size: 30px; font-weight: 700; }
+    .mini span { width: 46px; height: 46px; border-radius: 14px; background: var(--prune-fonce); display: grid; place-items: center; box-shadow: 0 0 0 2px rgba(233,185,73,.5); }
+
+    /* Légendes */
+    .legende { left: 40px; right: 40px; top: 128px; text-align: center; color: #fff; }
+    .legende .num { display: inline-block; background: var(--or); color: #2b1a05; font-weight: 800; font-size: 22px; padding: 6px 18px; border-radius: 999px; margin-bottom: 14px; }
+    .legende h2 { font-family: Fraunces, Georgia, serif; font-size: 50px; line-height: 1.08; }
+    .legende h2 em { color: var(--or); font-style: italic; }
+
+    /* Téléphone */
+    .telephone { left: 50%; top: 360px; width: 400px; height: 800px; margin-left: -200px; border-radius: 58px; background: #1b1320; padding: 15px;
+      box-shadow: 0 50px 90px -30px rgba(0,0,0,.7), 0 0 0 3px #3a2a42 inset; }
+    .ecran { position: relative; width: 100%; height: 100%; border-radius: 44px; background: var(--creme); overflow: hidden; }
+    .encoche { position: absolute; z-index: 5; top: 13px; left: 50%; translate: -50% 0; width: 110px; height: 30px; border-radius: 18px; background: #1b1320; }
+    .vue { position: absolute; inset: 0; }
+    .barre { background: var(--prune); color: #fff; padding: 60px 22px 16px; font-weight: 700; font-size: 21px; }
+    .barre small { display: block; font-weight: 400; opacity: .8; font-size: 15px; margin-top: 2px; }
+    .corps { padding: 14px; display: grid; gap: 10px; }
+    .ligne { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 16px; padding: 13px 16px; font-size: 18px; }
+    .ligne b { font-family: Fraunces, serif; font-size: 22px; color: var(--prune-fonce); }
+    .res { background: #efe1f3; border-radius: 20px; padding: 14px 16px; }
+    .res .t { font-size: 14px; color: #5d4c66; }
+    .res .v { font-family: Fraunces, serif; font-size: 34px; font-weight: 700; color: var(--prune-fonce); }
+    .plan { background: #fff; border-radius: 20px; padding: 10px; }
+    .etape { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 16px; padding: 12px 14px; font-size: 18px; font-weight: 600; }
+    .etape i { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 800; flex: none;
+      background: #e7f6ee; color: var(--vert); }
+    .notif { left: 10px; right: 10px; top: 52px; z-index: 4; background: #fff; border-radius: 20px; padding: 12px 14px; display: flex; gap: 12px;
+      box-shadow: 0 16px 34px -10px rgba(0,0,0,.35); font-size: 15px; line-height: 1.35; }
+    .notif .wa { width: 40px; height: 40px; border-radius: 12px; background: #25d366; display: grid; place-items: center; flex: none; }
+    .notif b { display: block; font-size: 14px; color: var(--gris); }
+    /* Facture */
+    .facture { margin: 14px; background: #fff; border-radius: 20px; padding: 18px; position: relative; font-size: 15px; }
+    .facture .tete { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--prune-clair); }
+    .facture .logo-f { width: 52px; height: 52px; border-radius: 14px; background: var(--prune); display: grid; place-items: center; flex: none; }
+    .facture .tete b { font-family: Fraunces, serif; font-size: 20px; display: block; }
+    .facture .tete small { color: var(--gris); }
+    .facture .l { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e4dbe6; }
+    .facture .total { display: flex; justify-content: space-between; padding-top: 12px; font-weight: 800; font-size: 19px; color: var(--prune-fonce); }
+    .tampon { right: 70px; top: 470px; border: 5px solid var(--vert); color: var(--vert); font-weight: 800; font-size: 34px; letter-spacing: .08em;
+      padding: 4px 14px; border-radius: 12px; transform: rotate(-14deg); background: rgba(255,255,255,.85); }
+    .bouton-wa { margin: 6px 14px 0; background: #25d366; color: #fff; border-radius: 16px; padding: 14px; text-align: center; font-weight: 700; font-size: 18px; }
+
+    /* Fin */
+    .fin-titre { left: 40px; right: 40px; top: 300px; text-align: center; color: #fff; font-family: Fraunces, Georgia, serif; font-size: 66px; line-height: 1.05; }
+    .fin-titre em { color: var(--or); font-style: italic; }
+    .prix { left: 40px; right: 40px; top: 560px; display: grid; gap: 16px; }
+    .offre { display: flex; justify-content: space-between; align-items: center; border: 2px solid rgba(255,255,255,.2); border-radius: 22px; padding: 18px 24px; color: #fff; font-size: 24px; }
+    .offre b { font-family: Fraunces, serif; font-size: 36px; }
+    .offre b sup { font-family: Inter, sans-serif; font-size: 14px; margin-left: 4px; }
+    .offre.or { border-color: var(--or); background: rgba(233,185,73,.13); }
+    .appel { left: 30px; right: 30px; top: 920px; text-align: center; background: var(--or); color: #2b1a05; border-radius: 26px; padding: 22px 10px; }
+    .appel b { display: block; font-size: 34px; font-weight: 800; }
+    .appel span { font-size: 22px; font-weight: 600; }
+    .contact { left: 0; right: 0; top: 1080px; text-align: center; color: #fff; font-size: 26px; display: flex; justify-content: center; gap: 10px; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="film">
+  <div class="anneau"></div>
+  <svg class="fil" viewBox="0 0 720 40" preserveAspectRatio="none"><path d="M0 20 Q 90 0 180 20 T 360 20 T 540 20 T 720 20" fill="none" stroke="#e9b949" stroke-opacity=".5" stroke-width="3" stroke-dasharray="12 9"/></svg>
+
+  <!-- Scène 1 : marque -->
+  <div class="abs logo" id="logo"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M8.2 15.8 19 4M15.8 15.8 5 4" stroke="#e9b949" stroke-width="2.4"/><circle cx="6" cy="18" r="3" stroke="#fff" stroke-width="2.2"/><circle cx="18" cy="18" r="3" stroke="#fff" stroke-width="2.2"/></svg></div>
+  <div class="abs nom" id="nom">Atelier Couture</div>
+  <div class="abs slogan" id="slogan" data-t="slogan">Votre atelier de couture,<br><em>enfin organisé.</em></div>
+
+  <!-- Petite marque en haut (scènes 2 à 6) -->
+  <div class="abs mini" id="mini"><span><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M8.2 15.8 19 4M15.8 15.8 5 4" stroke="#e9b949" stroke-width="2.4"/><circle cx="6" cy="18" r="3" stroke="#fff" stroke-width="2.2"/><circle cx="18" cy="18" r="3" stroke="#fff" stroke-width="2.2"/></svg></span>Atelier Couture</div>
+
+  <!-- Légendes -->
+  <div class="abs legende" id="leg1"><div class="num">1</div><h2 data-t="leg1">Prenez les <em>mesures</em></h2></div>
+  <div class="abs legende" id="leg2"><div class="num">2</div><h2 data-t="leg2">Le <em>métrage</em> se calcule tout seul</h2></div>
+  <div class="abs legende" id="leg3"><div class="num">3</div><h2 data-t="leg3">Suivez chaque <em>commande</em></h2></div>
+  <div class="abs legende" id="leg4"><div class="num">4</div><h2 data-t="leg4">Factures <em>à votre logo</em></h2></div>
+
+  <!-- Téléphone -->
+  <div class="abs telephone" id="tel"><div class="ecran"><div class="encoche"></div>
+    <!-- Vue mesures -->
+    <div class="vue" id="v1">
+      <div class="barre"><span data-t="mesures">Mesures</span><small>Mme Ngono · Kaba</small></div>
+      <div class="corps">
+        <div class="ligne" id="m1"><span data-t="poitrine">Tour de poitrine</span><b>96 cm</b></div>
+        <div class="ligne" id="m2"><span data-t="taille">Tour de taille</span><b>78 cm</b></div>
+        <div class="ligne" id="m3"><span data-t="bassin">Tour de bassin</span><b>104 cm</b></div>
+        <div class="ligne" id="m4"><span data-t="longueur">Longueur robe</span><b>140 cm</b></div>
+        <div class="ligne" id="m5"><span data-t="manche">Longueur manche</span><b>58 cm</b></div>
+        <div class="ligne" id="m6"><span data-t="epaule">Carrure</span><b>40 cm</b></div>
+      </div>
+    </div>
+    <!-- Vue métrage -->
+    <div class="vue" id="v2">
+      <div class="barre"><span data-t="calc">Calcul du métrage</span><small data-t="calcSous">Kaba + foulard · tissu 150 cm</small></div>
+      <div class="corps">
+        <div class="res"><div class="t" data-t="aAcheter">Tissu à acheter</div><div class="v"><span id="compteur">0,00</span> yd</div></div>
+        <div class="plan"><svg viewBox="0 0 150 170" width="100%"><rect width="150" height="170" rx="6" fill="#f1ede4"/>
+          <g stroke="#5d4c66" stroke-width=".7">
+            <rect id="p1" x="3" y="3" width="70" height="96" rx="3" fill="#ffe082"/><rect id="p2" x="77" y="3" width="70" height="96" rx="3" fill="#81d4fa"/>
+            <rect id="p3" x="3" y="103" width="46" height="64" rx="3" fill="#c5e1a5"/><rect id="p4" x="53" y="103" width="46" height="64" rx="3" fill="#c5e1a5"/>
+            <rect id="p5" x="103" y="103" width="44" height="30" rx="3" fill="#f8bbd0"/><rect id="p6" x="103" y="137" width="44" height="30" rx="3" fill="#b39ddb"/></g>
+          <g font-family="Inter" font-size="9" fill="#3c1247" text-anchor="middle" id="etiquettes"><text x="38" y="54" data-t="devant">Devant</text><text x="112" y="54" data-t="dos">Dos</text><text x="26" y="138" data-t="manche2">Manche</text><text x="76" y="138" data-t="manche2">Manche</text><text x="125" y="121" data-t="col">Col</text><text x="125" y="155" data-t="foulard">Foulard</text></g></svg></div>
+      </div>
+    </div>
+    <!-- Vue suivi -->
+    <div class="vue" id="v3">
+      <div class="barre"><span data-t="commande">Commande CMD-0042</span><small data-t="cmdSous">Mme Ngono · livraison samedi</small></div>
+      <div class="corps">
+        <div class="etape" id="e1"><i>✓</i><span data-t="decoupe">Découpe</span></div>
+        <div class="etape" id="e2"><i>✓</i><span data-t="couture">Couture</span></div>
+        <div class="etape" id="e3"><i>✓</i><span data-t="essayage">Essayage</span></div>
+        <div class="etape" id="e4"><i>✓</i><span data-t="finitions">Finitions</span></div>
+        <div class="etape" id="e5" style="background:#e7f6ee;color:#1d6b47"><i style="background:var(--vert);color:#fff">✓</i><span data-t="prete">Prête à livrer</span></div>
+      </div>
+      <div class="abs notif" id="notif"><div class="wa"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg></div>
+        <div><b>WhatsApp · Atelier Couture</b><span data-t="notif">Bonjour Mme Ngono, votre kaba est prêt ! Passez le récupérer quand vous voulez.</span></div></div>
+    </div>
+    <!-- Vue facture -->
+    <div class="vue" id="v4">
+      <div class="barre"><span data-t="facture">Facture FAC-0042</span><small>Mme Ngono</small></div>
+      <div class="facture">
+        <div class="tete"><div class="logo-f"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M8.2 15.8 19 4M15.8 15.8 5 4" stroke="#e9b949" stroke-width="2.4"/><circle cx="6" cy="18" r="3" stroke="#fff" stroke-width="2.2"/><circle cx="18" cy="18" r="3" stroke="#fff" stroke-width="2.2"/></svg></div>
+          <div><b data-t="atelierNom">Couture Élégance</b><small>Bamendjou · +237 6XX XX XX XX</small></div></div>
+        <div class="l"><span data-t="ligne1">Kaba + foulard</span><span>20 000</span></div>
+        <div class="l"><span data-t="ligne2">Broderie col</span><span>5 000</span></div>
+        <div class="total"><span>Total</span><span>25 000 FCFA</span></div>
+      </div>
+      <div class="abs tampon" id="tampon" data-t="payee">PAYÉE</div>
+      <div class="bouton-wa" id="bwa" data-t="envoyer">Envoyer sur WhatsApp</div>
+    </div>
+  </div></div>
+
+  <!-- Scène 6 : fin -->
+  <div class="abs fin-titre" id="finTitre" data-t="finTitre">Essayez <em>gratuitement</em></div>
+  <div class="abs prix" id="prix">
+    <div class="offre" id="o1"><span data-t="gratuit">Gratuit</span><b>0<sup>FCFA</sup></b></div>
+    <div class="offre or" id="o2"><span data-t="standard">Standard / mois</span><b>5 000<sup>FCFA</sup></b></div>
+    <div class="offre" id="o3"><span data-t="premium">Premium / mois</span><b>10 000<sup>FCFA</sup></b></div>
+  </div>
+  <div class="abs appel" id="appel"><b>atelier2couture.netlify.app</b><span data-t="appel">Android et navigateur · Orange Money · MTN MoMo</span></div>
+  <div class="abs contact" id="contact"><svg width="30" height="30" viewBox="0 0 24 24" fill="#25d366"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg>+237 676 14 33 53</div>
+</div>
+
+<script>
+  const EN = {
+    slogan: "Your tailoring workshop,<br><em>finally organised.</em>",
+    leg1: "Take the <em>measurements</em>", leg2: "The <em>yardage</em> is calculated for you", leg3: "Track every <em>order</em>", leg4: "Invoices <em>with your logo</em>",
+    mesures: "Measurements", poitrine: "Chest", taille: "Waist", bassin: "Hips", longueur: "Dress length", manche: "Sleeve length", epaule: "Shoulders",
+    calc: "Fabric calculator", calcSous: "Kaba + scarf · 150 cm fabric", aAcheter: "Fabric to buy", devant: "Front", dos: "Back", manche2: "Sleeve", col: "Collar", foulard: "Scarf",
+    commande: "Order CMD-0042", cmdSous: "Mrs Ngono · delivery Saturday", decoupe: "Cutting", couture: "Sewing", essayage: "Fitting", finitions: "Finishing", prete: "Ready for delivery",
+    notif: "Hello Mrs Ngono, your kaba is ready! Come and collect it whenever you like.",
+    facture: "Invoice FAC-0042", atelierNom: "Couture Élégance", ligne1: "Kaba + scarf", ligne2: "Collar embroidery", payee: "PAID", envoyer: "Send on WhatsApp",
+    finTitre: "Try it <em>for free</em>", gratuit: "Free", standard: "Standard / month", premium: "Premium / month", appel: "Android and browser · Orange Money · MTN MoMo"
+  };
+  const anglais = new URLSearchParams(location.search).get("lang") === "en";
+  if (anglais) {
+    document.documentElement.lang = "en";
+    document.querySelectorAll("[data-t]").forEach(el => { if (EN[el.dataset.t]) el.innerHTML = EN[el.dataset.t]; });
+  }
+
+  // ---- Chronologie (en secondes) ----
+  const TOTAL = 25;
+  const $ = id => document.getElementById(id);
+  const anims = [];
+  const doux = "cubic-bezier(.2,.8,.2,1)";
+  // Une sortie (opacité qui finit à 0) ne s'applique qu'après son début (fill « forwards ») :
+  // sinon elle forcerait l'élément visible avant son apparition.
+  function anim(el, images, debut, duree, easing = doux) {
+    const sortie = images[0].opacity === 1 && images[images.length - 1].opacity === 0;
+    const a = (typeof el === "string" ? $(el) : el).animate(images, { delay: debut * 1000, duration: duree * 1000, fill: sortie ? "forwards" : "both", easing });
+    a.pause();
+    anims.push(a);
+  }
+  // Apparition puis disparition d'un élément entre deux instants.
+  function presence(id, entree, sortie, de = "translateY(30px)") {
+    anim(id, [{ opacity: 0, transform: de }, { opacity: 1, transform: "none" }], entree, .6);
+    if (sortie) anim(id, [{ opacity: 1 }, { opacity: 0 }], sortie, .45, "ease-in");
+  }
+  // Les éléments masqués au départ
+  ["mini", "leg1", "leg2", "leg3", "leg4", "tel", "v2", "v3", "v4", "finTitre", "prix", "appel", "contact"].forEach(id => $(id).style.opacity = 0);
+
+  // Scène 1 (0 – 3 s)
+  anim("logo", [{ opacity: 0, transform: "scale(.4) rotate(-20deg)" }, { opacity: 1, transform: "scale(1.08)" }, { opacity: 1, transform: "none" }], .2, 1);
+  presence("nom", .7, 2.7);
+  presence("slogan", 1.2, 2.7);
+  anim("logo", [{ opacity: 1 }, { opacity: 0, transform: "scale(.8)" }], 2.7, .45, "ease-in");
+
+  // Téléphone (3 – 20.6 s)
+  presence("mini", 3, 20.6, "translateY(-20px)");
+  anim("tel", [{ opacity: 0, transform: "translateY(500px) rotate(6deg)" }, { opacity: 1, transform: "none" }], 3, .9);
+  anim("tel", [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(600px) rotate(-6deg)" }], 20.4, .7, "ease-in");
+
+  // Scène 2 : mesures (3 – 7.5 s)
+  presence("leg1", 3.3, 7.3);
+  ["m1", "m2", "m3", "m4", "m5", "m6"].forEach((id, i) => presence(id, 3.9 + i * .38, null, "translateX(60px)"));
+  anim("v1", [{ opacity: 1 }, { opacity: 0 }], 7.4, .4);
+
+  // Scène 3 : métrage (7.5 – 12 s)
+  presence("leg2", 7.7, 11.8);
+  anim("v2", [{ opacity: 0 }, { opacity: 1 }], 7.5, .4);
+  ["p1", "p2", "p3", "p4", "p5", "p6"].forEach((id, i) => anim(id, [{ opacity: 0, transform: "translateY(-40px)" }, { opacity: 1, transform: "none" }], 8.8 + i * .25, .5));
+  anim("etiquettes", [{ opacity: 0 }, { opacity: 1 }], 10.4, .4);
+  anim("v2", [{ opacity: 1 }, { opacity: 0 }], 11.9, .4);
+
+  // Scène 4 : suivi (12 – 16.5 s)
+  presence("leg3", 12.2, 16.3);
+  anim("v3", [{ opacity: 0 }, { opacity: 1 }], 12, .4);
+  ["e1", "e2", "e3", "e4", "e5"].forEach((id, i) => presence(id, 12.4 + i * .45, null, "scale(.85)"));
+  anim("notif", [{ opacity: 0, transform: "translateY(-120px)" }, { opacity: 1, transform: "none" }], 14.6, .6);
+  anim("v3", [{ opacity: 1 }, { opacity: 0 }], 16.4, .4);
+
+  // Scène 5 : facture (16.5 – 20.5 s)
+  presence("leg4", 16.7, 20.3);
+  anim("v4", [{ opacity: 0 }, { opacity: 1 }], 16.5, .4);
+  anim("tampon", [{ opacity: 0, transform: "rotate(-14deg) scale(2.4)" }, { opacity: 1, transform: "rotate(-14deg) scale(1)" }], 17.8, .35, "ease-in");
+  anim("bwa", [{ transform: "none" }, { transform: "scale(.94)" }, { transform: "none" }], 19, .4);
+
+  // Scène 6 : fin (20.8 – 25 s)
+  presence("finTitre", 20.8, null, "scale(.8)");
+  presence("prix", 21.3, null);
+  ["o1", "o2", "o3"].forEach((id, i) => anim(id, [{ opacity: 0, transform: "translateX(-80px)" }, { opacity: 1, transform: "none" }], 21.4 + i * .2, .5));
+  presence("appel", 22.2, null, "scale(.7)");
+  presence("contact", 22.7, null);
+
+  // Compteur du métrage
+  const virgule = anglais ? "." : ",";
+  function majCompteur(t) {
+    const p = Math.min(1, Math.max(0, (t - 8.2) / 1.6));
+    const v = 5.75 * (1 - Math.pow(1 - p, 3));
+    $("compteur").textContent = v.toFixed(2).replace(".", virgule);
+  }
+
+  // Positionne tout le film à l'instant t (secondes). Utilisé par rendre.js.
+  window.allerA = t => {
+    anims.forEach(a => { a.currentTime = t * 1000; });
+    majCompteur(t);
+  };
+  window.DUREE = TOTAL;
+
+  // Lecture en boucle dans le navigateur (sauf pendant le rendu).
+  if (!new URLSearchParams(location.search).has("rendu")) {
+    const t0 = performance.now();
+    const boucle = now => { allerA(((now - t0) / 1000) % TOTAL); requestAnimationFrame(boucle); };
+    document.fonts.ready.then(() => requestAnimationFrame(boucle));
+  } else {
+    allerA(0);
+  }
+</script>
+</body>
+</html>

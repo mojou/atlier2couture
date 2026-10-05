@@ -198,6 +198,17 @@
     .tissu .ligne b { font-family: Fraunces, serif; font-size: 26px; color: #3c1247; }
     @media (max-width: 900px) { .vedette { padding: 32px 22px; } .vedette .conteneur-int { grid-template-columns: 1fr; } }
 
+    /* Vidéo de présentation */
+    .video-zone { display: grid; grid-template-columns: 1fr auto; gap: 56px; align-items: center; }
+    .video-zone ol { margin: 22px 0 28px; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: etape; }
+    .video-zone li { counter-increment: etape; display: flex; gap: 14px; align-items: center; font-size: 17px; }
+    .video-zone li::before { content: counter(etape); flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--or); color: #2b1a05;
+      font-weight: 800; display: grid; place-items: center; }
+    .video-cadre { width: min(340px, 82vw); aspect-ratio: 9 / 16; border-radius: 36px; overflow: hidden; background: #3c1247;
+      box-shadow: var(--ombre), 0 0 0 10px #1b1320; justify-self: center; }
+    .video-cadre video { width: 100%; height: 100%; display: block; object-fit: cover; }
+    @media (max-width: 860px) { .video-zone { grid-template-columns: 1fr; gap: 36px; } }
+
     /* Comment ça marche */
     .parcours { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: etape; }
     .parcours .carte { position: relative; padding-top: 34px; }
@@ -385,6 +396,27 @@
         <span><i class="point" style="background:#2e9e6b"></i>Données sécurisées</span>
       </div>
     </div>
+
+    <!-- Vidéo de présentation -->
+    <section id="video" style="padding-bottom:0">
+      <div class="conteneur video-zone">
+        <div class="apparition">
+          <span class="sur-titre">En 25 secondes</span>
+          <h2 style="font-size:clamp(30px,4vw,44px);margin:14px 0">Voyez l'application en action.</h2>
+          <ol>
+            <li>Prenez les mesures du client</li>
+            <li>Le métrage et le plan de coupe se calculent tout seuls</li>
+            <li>Suivez chaque commande et prévenez le client sur WhatsApp</li>
+            <li>Envoyez une facture à votre logo</li>
+          </ol>
+          <a class="btn btn-principal" href="#" data-lien="app">Essayer gratuitement</a>
+        </div>
+        <div class="video-cadre">
+          <video src="video-demo.mp4" poster="video-demo.jpg" autoplay muted loop playsinline preload="metadata"
+            aria-label="Démonstration d'Atelier Couture : mesures, calcul du métrage, suivi de commande et facture"></video>
+        </div>
+      </div>
+    </section>
 
     <!-- Fonctionnalités -->
     <section id="fonctions">

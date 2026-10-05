@@ -16,5 +16,9 @@ foreach ($langue in 'fr', 'en') {
   Rendre ($commun + @('--hide-scrollbars', '--window-size=1240,1754',
     "--screenshot=`"$dossier\Atelier-Couture-affiche-$langue.png`"", $url))
   Rendre ($commun + @('--no-pdf-header-footer', "--print-to-pdf=`"$dossier\Atelier-Couture-affiche-$langue.pdf`"", $url))
+  # Format Statut WhatsApp (vertical 1080 x 1920)
+  $statut = 'file:///' + ((Join-Path $dossier 'statut.html') -replace '\\', '/') + "?lang=$langue"
+  Rendre ($commun + @('--hide-scrollbars', '--window-size=1080,1920',
+    "--screenshot=`"$dossier\Atelier-Couture-statut-$langue.png`"", $statut))
 }
-Get-ChildItem $dossier -Filter 'Atelier-Couture-affiche-*' | Select-Object Name, Length
+Get-ChildItem $dossier -Filter 'Atelier-Couture-*' | Select-Object Name, Length
